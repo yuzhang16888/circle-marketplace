@@ -3,8 +3,15 @@ import streamlit as st
 from core.db import insert_listing
 from core.storage import save_listing_image
 
+
 def render(user):
     st.header("Create a New Listing")
+
+    # ✅ Show success message if we just created a listing
+    if st.session_state.get("listing_created"):
+        listing_id = st.session_state.get("listing_created_id")
+        if listing_id:
+            st.success(f"Listing published successfully! 🎉 (ID: {listing_id})")
 
     with st.form("create_listing_form"):
         title = st.text_input("Title")
@@ -30,5 +37,9 @@ def render(user):
             image_path=image_path,
         )
 
-        st.success("Listing published successfully! 🎉")
-        st.caption(f"Listing ID: {listing_id}")
+        # ✅ Store success in session so it survives rerun
+        st.session_state["listing_created"] = True
+        st.session_state["listing_created_id"] = listing_id
+
+        # Rerun so the success block at the top is shown cleanly
+        st.rerun()
