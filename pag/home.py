@@ -8,6 +8,6 @@ from core.auth import ensure_user_logged_in
 
 def render(user):
     st.header("Circle Marketplace – Home")
-    #st.write("✅ `pages.home.render()` is working.")
+    st.write("✅ this is the new version` is working.")
     if user:
         st.write(f"Logged in as: **{user.get('email', 'unknown')}**")
