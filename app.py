@@ -3,7 +3,7 @@ import streamlit as st
 
 from core.db import init_db
 from core.auth import ensure_user_logged_in
-from pages import home
+from pag import home
 #, create_listing, my_listings, admin_dashboard
 
 def main():
