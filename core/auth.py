@@ -15,9 +15,14 @@ def ensure_user_logged_in():
         if st.button("Login"):
             # TODO: replace with real DB lookup
             st.session_state["user"] = {"id": 1, "email": email}
-            st.experimental_rerun()
+
+            # rerun safely
+            try:
+                st.rerun()
+            except:
+                st.experimental_rerun()
 
     with tab_signup:
-        st.write("Sign-up UI here...")  # can be added later
+        st.write("Sign-up UI here...")
 
     return None
