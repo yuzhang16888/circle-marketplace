@@ -1,7 +1,7 @@
 # pag/create_listing.py
 import streamlit as st
-from core.db import insert_listing
-from core.storage import save_listing_image
+from cor.db import insert_listing
+from cor.storage import save_listing_image
 
 def render(user):
     st.header("Create a New Listing")

@@ -1,6 +1,6 @@
 # pag/admin_dashboard.py
 import streamlit as st
-from core.db import get_all_listings
+from cor.db import get_all_listings
 
 def render(user):
     st.header("Admin Dashboard")

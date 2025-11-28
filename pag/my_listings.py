@@ -1,6 +1,6 @@
 # pag/my_listings.py
 import streamlit as st
-from core.db import get_listings_for_user
+from cor.db import get_listings_for_user
 
 def render(user):
     st.header("My Listings")
