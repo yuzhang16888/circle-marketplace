@@ -486,7 +486,7 @@ def page_my_listings():
         st.info("You don't have any listings yet.")
         return
 
-       for row in listings:
+        for row in listings:
         box = st.container(border=True)
         with box:
             cols_top = st.columns([1, 2])
