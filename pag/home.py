@@ -5,6 +5,7 @@ from core.storage import save_listing_image
 from core.auth import ensure_user_logged_in
 
 
+
 def render(user):
     st.header("Circle Marketplace – Home")
     #st.write("✅ `pages.home.render()` is working.")
