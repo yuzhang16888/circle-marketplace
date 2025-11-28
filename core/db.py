@@ -85,6 +85,20 @@ def insert_user_if_not_exists(email, display_name=None):
     conn.close()
     return user_id
 
+def get_all_users():
+    """Return all users in the system."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id, email, display_name
+        FROM users
+        ORDER BY id ASC
+        """
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return rows
 
 # ---------- LISTING HELPERS ----------
 
