@@ -1,4 +1,4 @@
-# pages/create_listing.py
+# pag/create_listing.py
 import streamlit as st
 from core.db import insert_listing
 from core.storage import save_listing_image
@@ -10,7 +10,7 @@ def render(user):
         title = st.text_input("Title")
         description = st.text_area("Description")
         price = st.number_input("Price", min_value=0.0, step=1.0)
-        image_file = st.file_uploader("Upload images", type=["jpg", "jpeg", "png"])
+        image_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
         submitted = st.form_submit_button("Publish Listing")
 
@@ -31,5 +31,5 @@ def render(user):
             image_path=image_path,
         )
 
-        st.success("Listing published!")
-        st.write(f"Listing ID: {listing_id}")
+        st.success("Listing published successfully! 🎉")
+        st.caption(f"Listing ID: {listing_id}")
