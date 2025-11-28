@@ -2,20 +2,15 @@
 import streamlit as st
 from core.db import insert_listing
 from core.storage import save_listing_image
-from core.db import init_db, insert_listing, get_listings_for_user, get_all_listings
-from core.storage import save_listing_image
-from core.auth import ensure_user_logged_in
-
 
 def render(user):
     st.header("Create a New Listing")
 
-    with st.form("create_listing_form", clear_on_submit=False):
+    with st.form("create_listing_form"):
         title = st.text_input("Title")
         description = st.text_area("Description")
         price = st.number_input("Price", min_value=0.0, step=1.0)
         image_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-
         submitted = st.form_submit_button("Publish Listing")
 
     if submitted:
