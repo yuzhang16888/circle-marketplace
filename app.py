@@ -197,6 +197,7 @@ def create_listing(
     condition: str,
     price: float,
     currency: str = "USD",
+    image_path: str | None = None,
 ):
     conn = get_db()
     cur = conn.cursor()
@@ -205,9 +206,9 @@ def create_listing(
         """
         INSERT INTO listings (
             seller_id, title, description, category, brand, condition,
-            price, currency, status, created_at
+            price, currency, status, created_at, image_path
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'available', ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'available', ?, ?)
         """,
         (
             seller_id,
@@ -219,6 +220,7 @@ def create_listing(
             price,
             currency,
             now,
+            image_path,
         ),
     )
     conn.commit()
