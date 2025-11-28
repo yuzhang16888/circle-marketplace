@@ -429,7 +429,7 @@ def page_browse_listings():
         elif relation == "second_degree":
             relation_label = "friend of a friend"
 
-                box = st.container(border=True)
+        box = st.container(border=True)
         with box:
             cols_top = st.columns([1, 2])
 
