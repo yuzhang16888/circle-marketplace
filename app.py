@@ -1,15 +1,15 @@
 # app.py
 import streamlit as st
-
 from core.db import init_db
 from core.auth import ensure_user_logged_in
 from pag import home, create_listing, my_listings, admin_dashboard  # 👈 use pag
 
 def main():
+    init_db()
     st.set_page_config(page_title="Circle Marketplace", layout="wide")
 
     # 1) Make sure DB exists
-    init_db()
+    
 
     # 2) Auth
     user = ensure_user_logged_in()
