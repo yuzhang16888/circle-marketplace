@@ -49,6 +49,7 @@ def init_db():
     """)
 
     # Listings
+        # Listings
     cur.execute("""
         CREATE TABLE IF NOT EXISTS listings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,7 +62,8 @@ def init_db():
             price REAL NOT NULL,
             currency TEXT NOT NULL DEFAULT 'USD',
             status TEXT NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            image_path TEXT
         )
     """)
 
