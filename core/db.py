@@ -9,18 +9,21 @@ def get_connection():
     return conn
 
 def init_db():
-    # Make sure directory exists
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    # 🔥 DEV-ONLY: delete the DB file so we 100% start clean
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+
+    # Make sure directory exists (dirname may be "" if DB in same folder)
+    db_dir = os.path.dirname(DB_PATH)
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
 
     conn = get_connection()
     cur = conn.cursor()
 
-    # DEV MODE: always recreate "listings" table
-    cur.execute("DROP TABLE IF EXISTS listings")
-
     cur.execute(
         """
-        CREATE TABLE IF NOT EXISTS listings (
+        CREATE TABLE listings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             title TEXT NOT NULL,
