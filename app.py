@@ -486,20 +486,32 @@ def page_my_listings():
         st.info("You don't have any listings yet.")
         return
 
-    for row in listings:
+       for row in listings:
         box = st.container(border=True)
         with box:
-            st.markdown(f"**{row['title']}**")
-            meta_cols = st.columns(3)
-            with meta_cols[0]:
-                st.write(f"Price: ${row['price']:,.2f} {row['currency']}")
-            with meta_cols[1]:
-                st.write(f"Status: {row['status']}")
-            with meta_cols[2]:
-                st.write(f"Created: {row['created_at'][:10]}")
+            cols_top = st.columns([1, 2])
 
-            if row["description"]:
-                st.write(row["description"])
+            with cols_top[0]:
+                if row["image_path"]:
+                    try:
+                        st.image(row["image_path"], use_column_width=True)
+                    except Exception:
+                        st.caption("Image not available.")
+                else:
+                    st.caption("No photo yet.")
+
+            with cols_top[1]:
+                st.markdown(f"**{row['title']}**")
+                meta_cols = st.columns(3)
+                with meta_cols[0]:
+                    st.write(f"Price: ${row['price']:,.2f} {row['currency']}")
+                with meta_cols[1]:
+                    st.write(f"Status: {row['status']}")
+                with meta_cols[2]:
+                    st.write(f"Created: {row['created_at'][:10]}")
+
+                if row["description"]:
+                    st.write(row["description"])
 
 def page_network():
     require_login()
