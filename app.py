@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import sqlite3
 import hashlib
@@ -365,21 +366,46 @@ def page_create_listing():
 
     description = st.text_area("Description")
 
+    st.markdown("### Photo")
+    uploaded_file = st.file_uploader(
+        "Upload one photo (JPEG/PNG recommended)", type=["jpg", "jpeg", "png"]
+    )
+
     if st.button("Publish listing", type="primary", use_container_width=True):
         if not title or price <= 0:
             st.error("Please provide at least a title and a positive price.")
-        else:
-            create_listing(
-                seller_id=st.session_state.user_id,
-                title=title,
-                description=description,
-                category=category,
-                brand=brand,
-                condition=condition,
-                price=price,
-            )
-            st.success("Listing created!")
-            st.experimental_rerun()
+            return
+
+        image_path = None
+
+        # Save uploaded file to media/ with a unique name
+        if uploaded_file is not None:
+            # make sure media folder exists
+            os.makedirs("media", exist_ok=True)
+
+            # build a unique file name
+            ext = os.path.splitext(uploaded_file.name)[1].lower()  # .jpg, .png
+            if ext not in [".jpg", ".jpeg", ".png"]:
+                ext = ".jpg"
+
+            filename = f"listing_{st.session_state.user_id}_{int(datetime.utcnow().timestamp())}{ext}"
+            image_path = os.path.join("media", filename)
+
+            with open(image_path, "wb") as f:
+                f.write(uploaded_file.read())
+
+        create_listing(
+            seller_id=st.session_state.user_id,
+            title=title,
+            description=description,
+            category=category,
+            brand=brand,
+            condition=condition,
+            price=price,
+            image_path=image_path,
+        )
+        st.success("Listing created!")
+        st.experimental_rerun()
 
 def page_browse_listings():
     require_login()
