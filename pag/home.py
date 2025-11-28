@@ -3,7 +3,8 @@ import streamlit as st
 from core.db import get_all_listings, get_friend_listings
 
 def render(user):
-    st.header("Circle Marketplace – Home")
+    st.header("Circle Marketplace – Home (friends + all listings)")
+    st.write(f"Logged in as: **{user.get('email', 'unknown')}**")
 
     # ---- Friends Listings ----
     st.subheader("Friends' Listings")
