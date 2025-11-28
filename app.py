@@ -9,31 +9,21 @@ from pages import home
 def main():
     st.set_page_config(page_title="Circle Marketplace", layout="wide")
 
-    # 1) Make sure DB exists
     init_db()
 
-    # 2) Auth – if you require login
     user = ensure_user_logged_in()
     if user is None:
-        st.stop()  # auth page already rendered
+        st.stop()
 
-    # 3) Navigation
     st.sidebar.title("Circle Marketplace")
     page = st.sidebar.radio(
         "Go to",
-        ["Home", "Create Listing", "My Listings", "Admin Dashboard"],
-        key="nav_page"
+        ["Home"],  # keep only Home until it's working
+        key="nav_page",
     )
 
-    # 4) Route to page
     if page == "Home":
         home.render(user)
-    elif page == "Create Listing":
-        create_listing.render(user)
-    elif page == "My Listings":
-        my_listings.render(user)
-    elif page == "Admin Dashboard":
-        admin_dashboard.render(user)
 
 if __name__ == "__main__":
     main()
