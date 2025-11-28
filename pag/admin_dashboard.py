@@ -1,20 +1,58 @@
 # pag/admin_dashboard.py
 import streamlit as st
-from core.db import get_all_listings
-from core.db import init_db, insert_listing, get_listings_for_user, get_all_listings
-from core.storage import save_listing_image
-from core.auth import ensure_user_logged_in
+from core.db import get_all_users, get_friend_ids, add_friend
+
 
 def render(user):
-    st.header("Admin Dashboard")
+    st.header("Admin Dashboard – Friend Manager")
 
-    # later you can add permission logic here
-    listings = get_all_listings()
+    st.markdown(
+        f"Current user: **{user['email']}** (id: `{user['id']}`)"
+    )
 
-    st.write(f"Total listings: {len(listings)}")
+    st.divider()
 
-    for row in listings:
-        with st.container(border=True):
-            st.markdown(f"**{row['title']}** – ${row['price']:.0f}")
-            st.write(row["description"])
-            st.caption(f"User: {row['user_id']} • ID: {row['id']} • {row['created_at']}")
+    # ----- Load users & friends -----
+    all_users = get_all_users()
+    friend_ids = set(get_friend_ids(user["id"]))
+
+    # Separate current user vs others
+    other_users = [u for u in all_users if u["id"] != user["id"]]
+
+    col_left, col_right = st.columns(2)
+
+    # ----- LEFT: all users (add as friend) -----
+    with col_left:
+        st.subheader("All Users")
+
+        if not other_users:
+            st.info("There are no other users yet. Log in with another email to create more users.")
+        else:
+            for u in other_users:
+                is_friend = u["id"] in friend_ids
+                label = u["display_name"] or u["email"]
+
+                cols = st.columns([3, 1])
+                with cols[0]:
+                    st.markdown(f"**{label}**  \n`{u['email']}`  \n(id: `{u['id']}`)")
+
+                with cols[1]:
+                    if is_friend:
+                        st.button("✅ Friend", key=f"friend_{u['id']}", disabled=True)
+                    else:
+                        if st.button("Add friend", key=f"add_{u['id']}"):
+                            add_friend(user["id"], u["id"])
+                            st.success(f"Added {label} as a friend.")
+                            st.experimental_rerun()
+
+    # ----- RIGHT: current friends -----
+    with col_right:
+        st.subheader("Your Friends")
+
+        if not friend_ids:
+            st.info("You don't have any friends set yet. Add some from the left side.")
+        else:
+            friend_map = {u["id"]: u for u in all_users if u["id"] in friend_ids}
+            for fid, fu in friend_map.items():
+                label = fu["display_name"] or fu["email"]
+                st.markdown(f"• **{label}**  \n`{fu['email']}`  \n(id: `{fid}`)")
