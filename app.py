@@ -429,38 +429,53 @@ def page_browse_listings():
         elif relation == "second_degree":
             relation_label = "friend of a friend"
 
-        box = st.container(border=True)
+                box = st.container(border=True)
         with box:
-            st.markdown(f"**{row['title']}**")
-            meta_cols = st.columns(3)
-            with meta_cols[0]:
-                st.write(f"Seller: {seller_name}")
-            with meta_cols[1]:
-                st.write(f"Price: ${row['price']:,.2f} {row['currency']}")
-            with meta_cols[2]:
-                st.write(f"Status: {row['status']}")
+            cols_top = st.columns([1, 2])
 
-            if row["category"]:
-                st.caption(f"Category: {row['category']}")
-            if row["brand"]:
-                st.caption(f"Brand: {row['brand']}")
-            if row["condition"]:
-                st.caption(f"Condition: {row['condition']}")
+            # Left: image (if exists)
+            with cols_top[0]:
+                if row["image_path"]:
+                    try:
+                        st.image(row["image_path"], use_column_width=True)
+                    except Exception:
+                        st.caption("Image not available.")
+                else:
+                    st.caption("No photo yet.")
 
-            if row["description"]:
-                st.write(row["description"])
+            # Right: details
+            with cols_top[1]:
+                st.markdown(f"**{row['title']}**")
+                meta_cols = st.columns(3)
+                with meta_cols[0]:
+                    st.write(f"Seller: {seller_name}")
+                with meta_cols[1]:
+                    st.write(f"Price: ${row['price']:,.2f} {row['currency']}")
+                with meta_cols[2]:
+                    st.write(f"Status: {row['status']}")
 
-            if allowed:
-                st.success(f"You can trade with this seller ({relation_label}).")
-                st.button(
-                    "I'm interested (placeholder, no messaging yet)",
-                    key=f"interest_{row['id']}",
-                )
-            else:
-                st.warning(
-                    "This seller is outside your 2-degree network. "
-                    "You can't trade with them yet."
-                )
+                if row["category"]:
+                    st.caption(f"Category: {row['category']}")
+                if row["brand"]:
+                    st.caption(f"Brand: {row['brand']}")
+                if row["condition"]:
+                    st.caption(f"Condition: {row['condition']}")
+
+                if row["description"]:
+                    st.write(row["description"])
+
+                if allowed:
+                    st.success(f"You can trade with this seller ({relation_label}).")
+                    st.button(
+                        "I'm interested (placeholder, no messaging yet)",
+                        key=f"interest_{row['id']}",
+                    )
+                else:
+                    st.warning(
+                        "This seller is outside your 2-degree network. "
+                        "You can't trade with them yet."
+                    )
+
 
 def page_my_listings():
     require_login()
