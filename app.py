@@ -3,7 +3,7 @@ import random
 import string
 import sqlite3
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Set, Tuple
 
 import streamlit as st
@@ -53,7 +53,7 @@ def init_db():
         )
     """)
 
-    # Listings (now includes image_path)
+    # Listings base table (without assuming columns)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS listings (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,10 +66,15 @@ def init_db():
             price REAL NOT NULL,
             currency TEXT NOT NULL DEFAULT 'USD',
             status TEXT NOT NULL,
-            created_at TEXT NOT NULL,
-            image_path TEXT
+            created_at TEXT NOT NULL
         )
     """)
+
+    # --- Tiny migration: ensure image_path exists on listings ---
+    cur.execute("PRAGMA table_info(listings)")
+    cols = [row["name"] for row in cur.fetchall()]
+    if "image_path" not in cols:
+        cur.execute("ALTER TABLE listings ADD COLUMN image_path TEXT")
 
     conn.commit()
     conn.close()
@@ -85,13 +90,13 @@ def create_user(
     name: str,
     email: str,
     password: str,
-    invite_code: Optional[str] = None
+    invite_code: Optional[str] = None,
 ):
     conn = get_db()
     cur = conn.cursor()
 
     password_hash = hash_password(password)
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
 
     try:
         cur.execute(
@@ -210,7 +215,7 @@ def create_listing(
 ):
     conn = get_db()
     cur = conn.cursor()
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
     cur.execute(
         """
         INSERT INTO listings (
@@ -275,7 +280,7 @@ def generate_invite_code(inviter_id: int) -> str:
     code = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
     conn = get_db()
     cur = conn.cursor()
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
     cur.execute(
         "INSERT INTO invite_codes (code, inviter_id, created_at) VALUES (?, ?, ?)",
         (code, inviter_id, now),
@@ -390,7 +395,8 @@ def page_create_listing():
             if ext not in [".jpg", ".jpeg", ".png"]:
                 ext = ".jpg"
 
-            filename = f"listing_{st.session_state.user_id}_{int(datetime.utcnow().timestamp())}{ext}"
+            ts = int(datetime.now(timezone.utc).timestamp())
+            filename = f"listing_{st.session_state.user_id}_{ts}{ext}"
             image_path = os.path.join("media", filename)
 
             with open(image_path, "wb") as f:
