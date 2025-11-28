@@ -1,8 +1,8 @@
 # app.py
 import streamlit as st
 
-from cor.db import init_db
-from cor.auth import ensure_user_logged_in
+from core.db import init_db
+from core.auth import ensure_user_logged_in
 from pag import home, create_listing, my_listings, admin_dashboard  # 👈 use pag
 
 def main():
