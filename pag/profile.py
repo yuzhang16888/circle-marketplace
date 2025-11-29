@@ -7,7 +7,22 @@ from core.db import (
     update_user_display_name,
     create_invite_code,
     get_invite_codes_for_user,
+    update_user_profile_image,
 )
+from core.storage import save_profile_image
+
+
+def _compute_initials(db_user) -> str:
+    first = (db_user["first_name"] or "").strip()
+    last = (db_user["last_name"] or "").strip()
+    if first or last:
+        return (first[:1] + last[:1]).upper()
+    # Fallback to display_name or email
+    if db_user["display_name"]:
+        return db_user["display_name"][:2].upper()
+    if db_user["email"]:
+        return db_user["email"][:2].upper()
+    return "??"
 
 
 def render(user):
@@ -19,14 +34,84 @@ def render(user):
         st.error("User not found.")
         return
 
+    # ---- PROFILE PHOTO ----
+    st.subheader("Profile Photo")
+
+    col_a, col_b = st.columns([1, 2])
+    with col_a:
+        if db_user["profile_image_path"]:
+            st.image(db_user["profile_image_path"], width=120)
+        else:
+            initials = _compute_initials(db_user)
+            st.markdown(
+                f"""
+                <div style="
+                    width: 120px;
+                    height: 120px;
+                    border-radius: 60px;
+                    background-color: #222;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 40px;
+                    font-weight: 600;
+                ">
+                    {initials}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.caption("No profile photo yet — using your initials for now.")
+
+    with col_b:
+        profile_file = st.file_uploader(
+            "Upload / change your profile picture",
+            type=["jpg", "jpeg", "png"],
+            key="profile_upload",
+        )
+        if st.button("Save Profile Picture"):
+            if profile_file is None:
+                st.warning("Please choose an image file first.")
+            else:
+                path = save_profile_image(user["id"], profile_file)
+                update_user_profile_image(user["id"], path)
+                st.success("Profile picture updated.")
+                # You can uncomment the next line if you want immediate visual refresh:
+                # st.rerun()
+
+    st.divider()
+
     # ---- BASIC INFO ----
     st.subheader("Basic Information")
+
     with st.form("profile_basic_form"):
         email = st.text_input("Email (read-only)", value=db_user["email"], disabled=True)
         display_name = st.text_input(
             "Display Name",
             value=db_user["display_name"] or db_user["email"].split("@")[0],
         )
+        first_name = st.text_input(
+            "First Name",
+            value=db_user["first_name"] or "",
+            disabled=True,  # keep as record of signup; editable later if needed
+        )
+        last_name = st.text_input(
+            "Last Name",
+            value=db_user["last_name"] or "",
+            disabled=True,
+        )
+        phone = st.text_input(
+            "Mobile Phone",
+            value=db_user["phone"] or "",
+            disabled=True,
+        )
+        inviter_name = st.text_input(
+            "Who Invited You (recorded at signup)",
+            value=db_user["inviter_name"] or "",
+            disabled=True,
+        )
+
         submitted = st.form_submit_button("Save Changes")
 
     if submitted:
@@ -101,4 +186,4 @@ def render(user):
 
     if st.button("Report Suspicious Transaction 🚨"):
         st.warning("Thank you. A Circle admin will review your report.")
-        # Later: we'll log this to the database for admin review
+        # Phase 2/3: log reports to DB for admin review
