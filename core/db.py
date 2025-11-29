@@ -404,7 +404,6 @@ def get_listings_for_user(user_id):
     )
     rows = cur.fetchall()
     conn.close()
-    return rows
 def get_listings_by_ids(listing_ids):
     """
     Fetch listings (with seller name) for a given list of IDs.
@@ -420,6 +419,7 @@ def get_listings_by_ids(listing_ids):
     query = f"""
         SELECT
             l.id,
+            l.user_id,
             l.title,
             l.description,
             l.price,
@@ -441,6 +441,7 @@ def get_listings_by_ids(listing_ids):
     rows = cur.fetchall()
     conn.close()
     return rows
+
 
 
 def get_all_listings():
@@ -628,3 +629,128 @@ def get_invite_by_code(code: str):
     row = cur.fetchone()
     conn.close()
     return row
+# ---------- ORDER HELPERS ----------
+
+def create_order(
+    buyer_id: int,
+    seller_id: int,
+    listing_id: int,
+    total_price: float,
+    shipping_name: str,
+    shipping_address1: str,
+    shipping_address2: str,
+    shipping_city: str,
+    shipping_state: str,
+    shipping_postal_code: str,
+    shipping_country: str,
+    shipping_phone: str,
+    payment_method: str,
+    buyer_note: str,
+) -> int:
+    """Create a new order record and return its ID."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO orders (
+            buyer_id, seller_id, listing_id, status, total_price,
+            shipping_name, shipping_address1, shipping_address2,
+            shipping_city, shipping_state, shipping_postal_code,
+            shipping_country, shipping_phone, payment_method, buyer_note
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            buyer_id,
+            seller_id,
+            listing_id,
+            "pending",  # initial status
+            total_price,
+            shipping_name,
+            shipping_address1,
+            shipping_address2,
+            shipping_city,
+            shipping_state,
+            shipping_postal_code,
+            shipping_country,
+            shipping_phone,
+            payment_method,
+            buyer_note,
+        ),
+    )
+    conn.commit()
+    order_id = cur.lastrowid
+    conn.close()
+    return order_id
+
+
+def get_orders_for_buyer(buyer_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT *
+        FROM orders
+        WHERE buyer_id = ?
+        ORDER BY created_at DESC
+        """,
+        (buyer_id,),
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_orders_for_seller(seller_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT *
+        FROM orders
+        WHERE seller_id = ?
+        ORDER BY created_at DESC
+        """,
+        (seller_id,),
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def update_order_status(order_id: int, status: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE orders
+        SET status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (status, order_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def update_order_shipping(
+    order_id: int,
+    tracking_number: str,
+    carrier: str,
+    estimated_delivery_date: str,
+):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE orders
+        SET tracking_number = ?,
+            carrier = ?,
+            estimated_delivery_date = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (tracking_number, carrier, estimated_delivery_date, order_id),
+    )
+    conn.commit()
+    conn.close()

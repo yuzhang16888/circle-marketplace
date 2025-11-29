@@ -34,7 +34,6 @@ def _get_image_list(row):
 def render(user):
     st.header("My Cart")
 
-    # Ensure cart state exists
     if "cart_listing_ids" not in st.session_state:
         st.session_state["cart_listing_ids"] = []
 
@@ -44,9 +43,7 @@ def render(user):
         st.info("Your cart is empty. Add items from the Home page to see them here. 🛒")
         return
 
-    # Use unique IDs but preserve order
     unique_ids = list(dict.fromkeys(cart_ids))
-
     rows = get_listings_by_ids(unique_ids)
     if not rows:
         st.info("No valid items found for your cart yet.")
@@ -90,7 +87,6 @@ def render(user):
                 seller = row["seller_name"] if row["seller_name"] else "Unknown"
                 st.caption(f"Seller: {seller}")
 
-                # Remove from cart
                 if st.button("Remove from cart", key=f"remove_cart_{listing_id}"):
                     st.session_state["cart_listing_ids"] = [
                         x for x in st.session_state["cart_listing_ids"] if x != listing_id
@@ -103,14 +99,11 @@ def render(user):
     st.markdown(f"**Subtotal:** ${subtotal:.0f}")
     st.caption("Taxes, shipping, and payment are not handled in this MVP yet.")
 
-    # Simple checkout stub
-    if st.button("Proceed to Checkout (MVP)"):
-        st.success(
-            "Checkout flow is coming soon. For now, screenshot or copy this page and "
-            "reach out to the seller(s) directly using your usual channels."
-        )
+    st.warning("For now, checkout supports **one item at a time** (MVP).")
 
-        st.info(
-            "Future version: we'll handle secure payments, shipping options, and "
-            "in-app messaging between buyers and sellers."
-        )
+    if st.button("Proceed to Checkout"):
+        # Take the first item in the cart for checkout
+        st.session_state["checkout_listing_id"] = unique_ids[0]
+        # Switch nav to Checkout
+        st.session_state["main_nav"] = "Checkout"
+        st.rerun()

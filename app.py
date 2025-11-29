@@ -2,7 +2,7 @@
 import streamlit as st
 from core.db import init_db
 from core.auth import ensure_user_logged_in
-from pag import home, create_listing, my_listings, admin_dashboard, profile,cart
+from pag import home, create_listing, my_listings, admin_dashboard, profile,cart,checkout
 
 
 def main():
@@ -26,6 +26,7 @@ def main():
          "Create Listing", 
          "My Listings",
          "Cart",
+         "Checkout",
          "Profile & Friends", 
          "Admin Dashboard",
          ],
@@ -41,6 +42,8 @@ def main():
         my_listings.render(user)
     elif page == "Cart":
         cart.render(user)
+    elif page=="Checkout"
+        checkoout.render(user)
     elif page == "Profile & Friends":
         profile.render(user)
     elif page == "Admin Dashboard":
