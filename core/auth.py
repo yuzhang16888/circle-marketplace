@@ -1,3 +1,13 @@
+# core/auth.py
+import streamlit as st
+from core.db import (
+    get_user_by_email,
+    create_user,
+    get_invite_by_code,
+    add_friend,
+)
+
+
 def ensure_user_logged_in():
     """
     Invite-only auth flow.
