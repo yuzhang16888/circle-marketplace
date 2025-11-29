@@ -373,6 +373,42 @@ def get_listings_for_user(user_id):
     rows = cur.fetchall()
     conn.close()
     return rows
+def get_listings_by_ids(listing_ids):
+    """
+    Fetch listings (with seller name) for a given list of IDs.
+    Returns [] if list is empty.
+    """
+    if not listing_ids:
+        return []
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    placeholders = ",".join("?" for _ in listing_ids)
+    query = f"""
+        SELECT
+            l.id,
+            l.title,
+            l.description,
+            l.price,
+            l.image_path,
+            l.created_at,
+            l.brand,
+            l.category,
+            l.condition,
+            l.retail_price,
+            l.image_paths,
+            l.status,
+            u.display_name AS seller_name
+        FROM listings l
+        JOIN users u ON u.id = l.user_id
+        WHERE l.id IN ({placeholders})
+    """
+
+    cur.execute(query, listing_ids)
+    rows = cur.fetchall()
+    conn.close()
+    return rows
 
 
 def get_all_listings():
