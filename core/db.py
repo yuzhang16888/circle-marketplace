@@ -676,7 +676,7 @@ def create_order(
             shipping_phone,
             payment_method,
             buyer_note,
-        ),
+        )
     )
     conn.commit()
     order_id = cur.lastrowid
