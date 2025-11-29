@@ -23,7 +23,8 @@ def main():
    page = st.sidebar.radio(
     "Go to",
     ["Home", "Create Listing", "My Listings", "Profile / Settings", "Admin Dashboard"],
-    key="nav_page",)
+    key="nav_page",
+)
 
     # 4) Routing
     if page == "Home":
