@@ -38,5 +38,5 @@ def main():
     elif page == "Admin Dashboard":
         admin_dashboard.render(user)
 
-if __name__ == "__main__":
-    main()
+    if __name__ == "__main__":
+        main()
