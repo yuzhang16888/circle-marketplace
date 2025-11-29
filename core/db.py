@@ -650,21 +650,33 @@ def create_order(
     """Create a new order record and return its ID."""
     conn = get_connection()
     cur = conn.cursor()
+
     cur.execute(
         """
         INSERT INTO orders (
-            buyer_id, seller_id, listing_id, status, total_price,
-            shipping_name, shipping_address1, shipping_address2,
-            shipping_city, shipping_state, shipping_postal_code,
-            shipping_country, shipping_phone, payment_method, buyer_note
+            buyer_id,
+            seller_id,
+            listing_id,
+            status,
+            total_price,
+            shipping_name,
+            shipping_address1,
+            shipping_address2,
+            shipping_city,
+            shipping_state,
+            shipping_postal_code,
+            shipping_country,
+            shipping_phone,
+            payment_method,
+            buyer_note
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             buyer_id,
             seller_id,
             listing_id,
-            "pending",  # initial status
+            "pending",           # status
             total_price,
             shipping_name,
             shipping_address1,
@@ -678,10 +690,12 @@ def create_order(
             buyer_note,
         ),
     )
+
     conn.commit()
     order_id = cur.lastrowid
     conn.close()
     return order_id
+
 
 
 def get_orders_for_buyer(buyer_id: int):
