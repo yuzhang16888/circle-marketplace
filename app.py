@@ -1,4 +1,5 @@
 # app.py
+from core.api_client import backend_ping
 import streamlit as st
 from core.db import init_db
 from core.auth import ensure_user_logged_in
@@ -17,6 +18,13 @@ NAV_PAGES = [
 def main():
     init_db()
     st.set_page_config(page_title="Circle Marketplace", layout="wide")
+
+    # Backend status check
+    if backend_ping():
+        st.sidebar.success("Backend: online ✅")
+    else:
+        st.sidebar.error("Backend: offline ❌")
+
 
     # 2) Auth
     user = ensure_user_logged_in()
