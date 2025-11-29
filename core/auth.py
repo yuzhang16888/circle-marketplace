@@ -40,15 +40,15 @@ def ensure_user_logged_in():
     """
     Invite-only auth flow with stronger identity:
 
+    LOG IN (existing user)
+      - email + password
+
     SIGN UP (new user, with invite code)
       - first name, last name, phone, email
       - who invited you (full name)
       - password + confirm password
       - optional profile picture
       - valid invite code required
-
-    LOG IN (existing user)
-      - email + password
     """
     # If already logged in, just return the user
     if "user" in st.session_state:
@@ -56,14 +56,56 @@ def ensure_user_logged_in():
 
     st.header("Welcome to Circle Marketplace")
 
-    default_mode = st.session_state.get("auth_mode", "Log In")
-    options = ["Sign Up", "Log In"]
-    default_index = options.index(default_mode) if default_mode in options else 1
-    mode = st.radio("Select:", options, horizontal=True, index=default_index)
-    st.session_state["auth_mode"] = mode
+    # Order is explicit: first "Log In", then "Sign Up"
+    mode = st.radio(
+        "Select:",
+        ["Log In", "Sign Up"],
+        horizontal=True,
+        index=0,
+    )
+
+    # ---------- LOG IN FLOW ----------
+    if mode == "Log In":
+        st.subheader("Log in to Circle")
+
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
+
+        if st.button("Log In"):
+            if not email or not password:
+                st.error("Please enter both email and password.")
+                return None
+
+            email_clean = email.strip().lower()
+            existing = get_user_by_email(email_clean)
+            if not existing:
+                st.error("No account found with this email. Please switch to Sign Up.")
+                return None
+
+            stored_hash = existing["password_hash"]
+            if not stored_hash:
+                st.error(
+                    "This account was created before passwords were required. "
+                    "Please contact support or sign up again with a new email."
+                )
+                return None
+
+            if not verify_password(password, stored_hash):
+                st.error("Incorrect password. Please try again.")
+                return None
+
+            user = {
+                "id": existing["id"],
+                "email": existing["email"],
+            }
+            st.session_state["user"] = user
+            st.success("Logged in successfully. Welcome back to Circle. ✨")
+            return user
+
+        return None
 
     # ---------- SIGN UP FLOW ----------
-    if mode == "Sign Up":
+    else:
         st.subheader("Create your Circle account")
 
         first_name = st.text_input("First name")
@@ -152,45 +194,5 @@ def ensure_user_logged_in():
                 "You're now logged in and can start exploring the marketplace. ✨"
             )
             return new_user
-
-        return None
-
-    # ---------- LOG IN FLOW ----------
-    else:
-        st.subheader("Log in to Circle")
-
-        email = st.text_input("Email")
-        password = st.text_input("Password", type="password")
-
-        if st.button("Log In"):
-            if not email or not password:
-                st.error("Please enter both email and password.")
-                return None
-
-            email_clean = email.strip().lower()
-            existing = get_user_by_email(email_clean)
-            if not existing:
-                st.error("No account found with this email. Please switch to Sign Up.")
-                return None
-
-            stored_hash = existing["password_hash"]
-            if not stored_hash:
-                st.error(
-                    "This account was created before passwords were required. "
-                    "Please contact support or sign up again with a new email."
-                )
-                return None
-
-            if not verify_password(password, stored_hash):
-                st.error("Incorrect password. Please try again.")
-                return None
-
-            user = {
-                "id": existing["id"],
-                "email": existing["email"],
-            }
-            st.session_state["user"] = user
-            st.success("Logged in successfully. Welcome back to Circle. ✨")
-            return user
 
         return None
