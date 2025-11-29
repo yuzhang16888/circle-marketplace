@@ -47,3 +47,34 @@ def get_users_count() -> int:
     cur.close()
     conn.close()
     return row["count"]
+
+import hashlib
+
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def create_user(email: str, password: str, full_name: str | None):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    hashed = hash_password(password)
+
+    cur.execute(
+        """
+        INSERT INTO users (email, password_hash, full_name, is_verified)
+        VALUES (?, ?, ?, 1)
+        """,
+        (email, hashed, full_name),
+    )
+    conn.commit()
+    uid = cur.lastrowid
+    conn.close()
+    return uid
+
+def get_user_by_email(email: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users WHERE email = ?", (email,))
+    row = cur.fetchone()
+    conn.close()
+    return row

@@ -33,3 +33,27 @@ def db_ping():
         print("DB error:", e)
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+        
+from pydantic import BaseModel
+from backend.db import create_user, get_user_by_email
+
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+    full_name: str | None = None
+
+@app.post("/auth/register")
+def register(payload: RegisterRequest):
+    email = payload.email.strip().lower()
+    password = payload.password.strip()
+
+    # 1) Check if email already exists
+    existing = get_user_by_email(email)
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered.")
+
+    # 2) Create the user
+    user_id = create_user(email=email, password=password, full_name=payload.full_name)
+    return {"status": "ok", "user_id": user_id}
