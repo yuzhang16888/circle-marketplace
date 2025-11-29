@@ -167,11 +167,13 @@ def ensure_user_logged_in():
             if existing:
                 st.error("This email already has an account. Please switch to Log In.")
                 return None
-
+                
             invite = get_invite_by_code(invite_code.strip())
             if not invite:
                 st.error("Invalid invite code. Please check with your friend.")
                 return None
+
+            inviter_id = invite["inviter_user_id"]
 
             # Hash password
             pw_hash = hash_password(password)
@@ -184,7 +186,9 @@ def ensure_user_logged_in():
                 last_name=last_name.strip(),
                 phone=phone.strip(),
                 inviter_name=inviter_full_name.strip(),
+                invited_by_user_id=inviter_id,
             )
+
 
             # Save profile image if provided
             if profile_file is not None:
