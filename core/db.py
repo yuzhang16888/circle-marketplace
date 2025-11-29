@@ -16,17 +16,24 @@ def init_db():
     """
     Initialize DB tables if they don't exist.
     We DO NOT drop tables here, so data persists across reruns.
+    Also ensure new columns exist via ALTER TABLE calls.
     """
     conn = get_connection()
     cur = conn.cursor()
 
-    # Users table
+    # Users table – full schema (CREATE IF NOT EXISTS won't add missing cols)
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
-            display_name TEXT
+            display_name TEXT,
+            first_name TEXT,
+            last_name TEXT,
+            phone TEXT,
+            inviter_name TEXT,
+            password_hash TEXT,
+            profile_image_path TEXT
         )
         """
     )
@@ -73,6 +80,21 @@ def init_db():
         """
     )
 
+    # ---- Schema upgrade for existing DBs: add missing columns on users ----
+    for col, col_def in [
+        ("first_name", "TEXT"),
+        ("last_name", "TEXT"),
+        ("phone", "TEXT"),
+        ("inviter_name", "TEXT"),
+        ("password_hash", "TEXT"),
+        ("profile_image_path", "TEXT"),
+    ]:
+        try:
+            cur.execute(f"ALTER TABLE users ADD COLUMN {col} {col_def}")
+        except sqlite3.OperationalError:
+            # Column already exists – ignore
+            pass
+
     conn.commit()
     conn.close()
 
@@ -83,7 +105,13 @@ def get_user_by_email(email: str):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "SELECT id, email, display_name FROM users WHERE email = ?",
+        """
+        SELECT id, email, display_name,
+               first_name, last_name, phone,
+               inviter_name, password_hash, profile_image_path
+        FROM users
+        WHERE email = ?
+        """,
         (email,),
     )
     row = cur.fetchone()
@@ -95,7 +123,13 @@ def get_user_by_id(user_id: int):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "SELECT id, email, display_name FROM users WHERE id = ?",
+        """
+        SELECT id, email, display_name,
+               first_name, last_name, phone,
+               inviter_name, password_hash, profile_image_path
+        FROM users
+        WHERE id = ?
+        """,
         (user_id,),
     )
     row = cur.fetchone()
@@ -103,13 +137,34 @@ def get_user_by_id(user_id: int):
     return row
 
 
-def create_user(email: str, display_name: str | None = None) -> int:
-    """Create a brand new user. Assumes email is not already in use."""
+def create_user(email, password_hash, first_name, last_name, phone, inviter_name):
+    """
+    Create a new user with extended profile info.
+    """
     conn = get_connection()
     cur = conn.cursor()
+
+    # Use first_name as display_name fallback, else email prefix
+    base_display = first_name or email.split("@")[0]
+
     cur.execute(
-        "INSERT INTO users (email, display_name) VALUES (?, ?)",
-        (email, display_name or email.split("@")[0]),
+        """
+        INSERT INTO users (
+            email, display_name,
+            first_name, last_name, phone,
+            inviter_name, password_hash
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            email,
+            base_display,
+            first_name,
+            last_name,
+            phone,
+            inviter_name,
+            password_hash,
+        ),
     )
     conn.commit()
     user_id = cur.lastrowid
@@ -119,13 +174,14 @@ def create_user(email: str, display_name: str | None = None) -> int:
 
 def insert_user_if_not_exists(email, display_name=None):
     """
-    Legacy helper – keep for compatibility.
-    Used nowhere in the new auth flow, but safe to leave.
+    Legacy helper – keep for compatibility with old code,
+    but new auth flow uses create_user directly.
     """
     existing = get_user_by_email(email)
     if existing:
         return existing["id"]
-    return create_user(email, display_name)
+    # Minimal create if somehow called
+    return create_user(email, password_hash="", first_name=None, last_name=None, phone=None, inviter_name=None)
 
 
 def get_all_users():
@@ -134,7 +190,9 @@ def get_all_users():
     cur = conn.cursor()
     cur.execute(
         """
-        SELECT id, email, display_name
+        SELECT id, email, display_name,
+               first_name, last_name, phone,
+               inviter_name, profile_image_path
         FROM users
         ORDER BY id ASC
         """
@@ -150,6 +208,17 @@ def update_user_display_name(user_id: int, display_name: str):
     cur.execute(
         "UPDATE users SET display_name = ? WHERE id = ?",
         (display_name, user_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def update_user_profile_image(user_id: int, image_path: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE users SET profile_image_path = ? WHERE id = ?",
+        (image_path, user_id),
     )
     conn.commit()
     conn.close()
@@ -310,7 +379,6 @@ def get_invite_codes_for_user(inviter_user_id: int):
     finally:
         conn.close()
     return rows
-
 
 
 def get_invite_by_code(code: str):
