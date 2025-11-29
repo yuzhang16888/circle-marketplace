@@ -34,7 +34,9 @@ def init_db():
             phone TEXT,
             inviter_name TEXT,
             password_hash TEXT,
-            profile_image_path TEXT
+            profile_image_path TEXT,
+            invited_by_user_id INTEGER,
+            FOREIGN KEY (invited_by_user_id) REFERENCES users(id)
         )
         """
     )
@@ -89,6 +91,7 @@ def init_db():
         ("inviter_name", "TEXT"),
         ("password_hash", "TEXT"),
         ("profile_image_path", "TEXT"),
+        ("invited_by_user_id", "INTEGER"),
     ]:
         try:
             cur.execute(f"ALTER TABLE users ADD COLUMN {col} {col_def}")
@@ -107,7 +110,7 @@ def init_db():
         try:
             cur.execute(f"ALTER TABLE listings ADD COLUMN {col} {col_def}")
         except sqlite3.OperationalError:
-            pass  # column already exists
+       	    pass  # column already exists
 
     conn.commit()
     conn.close()
@@ -122,7 +125,8 @@ def get_user_by_email(email: str):
         """
         SELECT id, email, display_name,
                first_name, last_name, phone,
-               inviter_name, password_hash, profile_image_path
+               inviter_name, password_hash, profile_image_path,
+               invited_by_user_id
         FROM users
         WHERE email = ?
         """,
@@ -140,7 +144,8 @@ def get_user_by_id(user_id: int):
         """
         SELECT id, email, display_name,
                first_name, last_name, phone,
-               inviter_name, password_hash, profile_image_path
+               inviter_name, password_hash, profile_image_path,
+               invited_by_user_id
         FROM users
         WHERE id = ?
         """,
@@ -151,9 +156,10 @@ def get_user_by_id(user_id: int):
     return row
 
 
-def create_user(email, password_hash, first_name, last_name, phone, inviter_name):
+def create_user(email, password_hash, first_name, last_name, phone, inviter_name, invited_by_user_id=None):
     """
     Create a new user with extended profile info.
+    invited_by_user_id: the user_id of the inviter (if they signed up via invite).
     """
     conn = get_connection()
     cur = conn.cursor()
@@ -165,9 +171,9 @@ def create_user(email, password_hash, first_name, last_name, phone, inviter_name
         INSERT INTO users (
             email, display_name,
             first_name, last_name, phone,
-            inviter_name, password_hash
+            inviter_name, password_hash, invited_by_user_id
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             email,
@@ -177,6 +183,7 @@ def create_user(email, password_hash, first_name, last_name, phone, inviter_name
             phone,
             inviter_name,
             password_hash,
+            invited_by_user_id,
         ),
     )
     conn.commit()
@@ -193,7 +200,15 @@ def insert_user_if_not_exists(email, display_name=None):
     existing = get_user_by_email(email)
     if existing:
         return existing["id"]
-    return create_user(email, password_hash="", first_name=None, last_name=None, phone=None, inviter_name=None)
+    return create_user(
+        email=email,
+        password_hash="",
+        first_name=None,
+        last_name=None,
+        phone=None,
+        inviter_name=None,
+        invited_by_user_id=None,
+    )
 
 
 def get_all_users():
@@ -204,10 +219,35 @@ def get_all_users():
         """
         SELECT id, email, display_name,
                first_name, last_name, phone,
-               inviter_name, profile_image_path
+               inviter_name, profile_image_path,
+               invited_by_user_id
         FROM users
         ORDER BY id ASC
         """
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_users_invited_by(inviter_user_id: int):
+    """Return users who were invited by this user and successfully signed up."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT
+            id,
+            email,
+            display_name,
+            first_name,
+            last_name,
+            profile_image_path
+        FROM users
+        WHERE invited_by_user_id = ?
+        ORDER BY id ASC
+        """,
+        (inviter_user_id,),
     )
     rows = cur.fetchall()
     conn.close()
@@ -267,7 +307,6 @@ def insert_listing(
     image_paths: list of file paths (will be JSON-serialized).
     status: 'published', 'draft', or 'inactive'.
     """
-    # Normalize image paths
     if image_paths:
         image_paths_json = json.dumps(image_paths)
         main_image_path = image_paths[0]
@@ -368,10 +407,7 @@ def get_all_listings():
 
 
 def delete_listing(user_id: int, listing_id: int) -> bool:
-    """
-    Permanently delete a listing, only if it belongs to this user.
-    Returns True if anything was deleted.
-    """
+    """Permanently delete a listing, only if it belongs to this user."""
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -385,10 +421,7 @@ def delete_listing(user_id: int, listing_id: int) -> bool:
 
 
 def update_listing_status(user_id: int, listing_id: int, status: str) -> bool:
-    """
-    Update a listing status (draft/published/inactive), only if it belongs to this user.
-    Returns True if updated.
-    """
+    """Update a listing status (draft/published/inactive), only if it belongs to this user."""
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
