@@ -3,6 +3,19 @@ import streamlit as st
 from core.db import get_all_listings, get_friend_listings
 
 
+def _format_meta(row):
+    bits = []
+    if row["brand"]:
+        bits.append(str(row["brand"]))
+    if row["category"]:
+        bits.append(str(row["category"]))
+    if row["condition"]:
+        bits.append(str(row["condition"]))
+    if bits:
+        return " · ".join(bits)
+    return None
+
+
 def render(user):
     st.header("Circle Marketplace – Home (Friends + All Listings)")
 
@@ -12,10 +25,9 @@ def render(user):
         st.markdown(f"Logged in as: **{user.get('email', 'unknown')}**")
     with cols[1]:
         if st.button("Log out / switch user"):
-            # Clear current user and rerun → will show login screen again
             if "user" in st.session_state:
                 del st.session_state["user"]
-            st.rerun()  # ✅ use st.rerun() in modern Streamlit
+            st.rerun()
 
     st.divider()
 
@@ -29,12 +41,19 @@ def render(user):
         for row in friend_listings:
             with st.container(border=True):
                 st.markdown(f"**{row['title']}** – ${row['price']:.0f}")
+
+                meta = _format_meta(row)
+                if meta:
+                    st.caption(meta)
+
                 st.write(row["description"])
+
                 if row["image_path"]:
                     try:
                         st.image(row["image_path"], use_container_width=True)
                     except Exception:
                         st.caption("Image not available.")
+
                 seller = row["seller_name"] or "Unknown"
                 st.caption(f"Seller: {seller} • Created: {row['created_at']}")
 
@@ -51,11 +70,21 @@ def render(user):
     for row in all_listings:
         with st.container(border=True):
             st.markdown(f"**{row['title']}** – ${row['price']:.0f}")
+
+            meta = _format_meta(row)
+            if meta:
+                st.caption(meta)
+
+            if row["retail_price"]:
+                st.caption(f"Original retail: ${row['retail_price']:.0f}")
+
             st.write(row["description"])
+
             if row["image_path"]:
                 try:
                     st.image(row["image_path"], use_container_width=True)
                 except Exception:
                     st.caption("Image not available.")
+
             seller = row["seller_name"] or "Unknown"
             st.caption(f"Seller: {seller} • Created: {row['created_at']}")
