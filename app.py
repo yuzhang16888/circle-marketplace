@@ -40,7 +40,7 @@ def main():
     elif page == "My Listings":
         my_listings.render(user)
     elif page == "Cart":
-        admin_dashboard.render(user)
+        cart.render(user)
     elif page == "Profile & Friends":
         profile.render(user)
     elif page == "Admin Dashboard":
