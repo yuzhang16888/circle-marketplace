@@ -2,7 +2,7 @@
 import streamlit as st
 from core.db import init_db
 from core.auth import ensure_user_logged_in
-from pag import home, create_listing, my_listings, admin_dashboard, profile
+from pag import home, create_listing, my_listings, admin_dashboard, profile,cart
 
 
 def main():
@@ -22,7 +22,13 @@ def main():
     
     page = st.sidebar.radio(
         "Go to",
-        ["Home", "Create Listing", "My Listings", "Profile & Friends", "Admin Dashboard"],
+        ["Home",
+         "Create Listing", 
+         "My Listings",
+         "Cart"
+         "Profile & Friends", 
+         "Admin Dashboard",
+         ],
         key="nav_page",
 )
 
@@ -33,10 +39,13 @@ def main():
         create_listing.render(user)
     elif page == "My Listings":
         my_listings.render(user)
+     elif page == "Cart":
+        admin_dashboard.render(user)
     elif page == "Profile & Friends":
         profile.render(user)
     elif page == "Admin Dashboard":
         admin_dashboard.render(user)
+
 
 if __name__ == "__main__":
     main()
