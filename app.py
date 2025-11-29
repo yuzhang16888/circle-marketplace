@@ -42,7 +42,7 @@ def main():
         my_listings.render(user)
     elif page == "Cart":
         cart.render(user)
-    elif page=="Checkout"
+    elif page=="Checkout":
         checkoout.render(user)
     elif page == "Profile & Friends":
         profile.render(user)
