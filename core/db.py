@@ -102,7 +102,7 @@ def init_db():
         ("condition", "TEXT"),
         ("retail_price", "REAL"),
         ("image_paths", "TEXT"),
-        ("status", "TEXT"),  # e.g. 'draft' or 'published'
+        ("status", "TEXT"),  # e.g. 'draft', 'published', 'inactive'
     ]:
         try:
             cur.execute(f"ALTER TABLE listings ADD COLUMN {col} {col_def}")
@@ -265,7 +265,7 @@ def insert_listing(
     Insert a new listing.
 
     image_paths: list of file paths (will be JSON-serialized).
-    status: 'published' or 'draft'.
+    status: 'published', 'draft', or 'inactive'.
     """
     # Normalize image paths
     if image_paths:
@@ -365,6 +365,40 @@ def get_all_listings():
     rows = cur.fetchall()
     conn.close()
     return rows
+
+
+def delete_listing(user_id: int, listing_id: int) -> bool:
+    """
+    Permanently delete a listing, only if it belongs to this user.
+    Returns True if anything was deleted.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM listings WHERE id = ? AND user_id = ?",
+        (listing_id, user_id),
+    )
+    deleted = cur.rowcount > 0
+    conn.commit()
+    conn.close()
+    return deleted
+
+
+def update_listing_status(user_id: int, listing_id: int, status: str) -> bool:
+    """
+    Update a listing status (draft/published/inactive), only if it belongs to this user.
+    Returns True if updated.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE listings SET status = ? WHERE id = ? AND user_id = ?",
+        (status, listing_id, user_id),
+    )
+    updated = cur.rowcount > 0
+    conn.commit()
+    conn.close()
+    return updated
 
 
 # ---------- FRIENDSHIP HELPERS ----------
