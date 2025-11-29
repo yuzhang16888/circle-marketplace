@@ -79,17 +79,34 @@ def init_db():
 
 # ---------- USER HELPERS ----------
 
-def insert_user_if_not_exists(email, display_name=None):
-    """Return user_id for this email, creating the user if needed."""
+def get_user_by_email(email: str):
     conn = get_connection()
     cur = conn.cursor()
-
-    cur.execute("SELECT id FROM users WHERE email = ?", (email,))
+    cur.execute(
+        "SELECT id, email, display_name FROM users WHERE email = ?",
+        (email,),
+    )
     row = cur.fetchone()
-    if row:
-        conn.close()
-        return row["id"]
+    conn.close()
+    return row
 
+
+def get_user_by_id(user_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT id, email, display_name FROM users WHERE id = ?",
+        (user_id,),
+    )
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+
+def create_user(email: str, display_name: str | None = None) -> int:
+    """Create a brand new user. Assumes email is not already in use."""
+    conn = get_connection()
+    cur = conn.cursor()
     cur.execute(
         "INSERT INTO users (email, display_name) VALUES (?, ?)",
         (email, display_name or email.split("@")[0]),
@@ -98,6 +115,17 @@ def insert_user_if_not_exists(email, display_name=None):
     user_id = cur.lastrowid
     conn.close()
     return user_id
+
+
+def insert_user_if_not_exists(email, display_name=None):
+    """
+    Legacy helper – keep for compatibility.
+    Used nowhere in the new auth flow, but safe to leave.
+    """
+    existing = get_user_by_email(email)
+    if existing:
+        return existing["id"]
+    return create_user(email, display_name)
 
 
 def get_all_users():
@@ -114,18 +142,6 @@ def get_all_users():
     rows = cur.fetchall()
     conn.close()
     return rows
-
-
-def get_user_by_id(user_id: int):
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT id, email, display_name FROM users WHERE id = ?",
-        (user_id,),
-    )
-    row = cur.fetchone()
-    conn.close()
-    return row
 
 
 def update_user_display_name(user_id: int, display_name: str):
@@ -279,9 +295,25 @@ def get_invite_codes_for_user(inviter_user_id: int):
         FROM invites
         WHERE inviter_user_id = ?
         ORDER BY created_at DESC
-        """,
-        (inviter_user_id,),
+        """
     )
     rows = cur.fetchall()
     conn.close()
     return rows
+
+
+def get_invite_by_code(code: str):
+    """Return invite row for a given code, or None if invalid."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id, inviter_user_id, code, created_at
+        FROM invites
+        WHERE code = ?
+        """,
+        (code,),
+    )
+    row = cur.fetchone()
+    conn.close()
+    return row
