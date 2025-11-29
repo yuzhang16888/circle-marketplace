@@ -64,12 +64,22 @@ def ensure_user_logged_in():
         index=0,
     )
 
-    # ---------- LOG IN FLOW ----------
+     # ---------- LOG IN FLOW ----------
     if mode == "Log In":
         st.subheader("Log in to Circle")
 
         email = st.text_input("Email")
         password = st.text_input("Password", type="password")
+
+        st.caption(
+            "Forgot password? For now, please email our team from your registered address "
+            "with the subject **“Circle password reset”**, and we’ll help you reset it."
+        )
+        st.markdown(
+            "[Compose reset email 📧](mailto:?subject=Circle%20password%20reset&body="
+            "Hi%20Circle%20team%2C%0A%0AI%27d%20like%20to%20reset%20my%20password."
+            "%20My%20registered%20email%20is%3A%20)"
+        )
 
         if st.button("Log In"):
             if not email or not password:
@@ -103,6 +113,7 @@ def ensure_user_logged_in():
             return user
 
         return None
+
 
     # ---------- SIGN UP FLOW ----------
     else:
