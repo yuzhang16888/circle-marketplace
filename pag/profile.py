@@ -8,8 +8,11 @@ from core.db import (
     create_invite_code,
     get_invite_codes_for_user,
     update_user_profile_image,
+    update_user_password_hash,   # 👈 add this
 )
 from core.storage import save_profile_image
+from core.auth import verify_password, hash_password  # 👈 add this
+
 
 
 def _compute_initials(db_user) -> str:
