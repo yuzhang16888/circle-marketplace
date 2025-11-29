@@ -23,7 +23,6 @@ def hash_password(password: str) -> str:
     dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100_000)
     return f"{binascii.hexlify(salt).decode()}${binascii.hexlify(dk).decode()}"
 
-
 def verify_password(password: str, stored: str | None) -> bool:
     if not stored:
         return False
@@ -32,9 +31,11 @@ def verify_password(password: str, stored: str | None) -> bool:
         salt = binascii.unhexlify(salt_hex)
         expected = binascii.unhexlify(hash_hex)
         dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100_000)
-        return hashlib.compare_digest(dk, expected)
+        # Use hmac.compare_digest for a constant-time comparison
+        return hmac.compare_digest(dk, expected)
     except Exception:
         return False
+
 
 
 def ensure_user_logged_in():
