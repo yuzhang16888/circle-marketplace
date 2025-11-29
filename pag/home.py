@@ -76,13 +76,15 @@ def _listing_card(row, user, prefix: str):
                     with c1:
                         if st.button("◀", key=f"{prefix}_prev_{listing_id}"):
                             st.session_state[img_key] = (idx - 1) % num_images
-                            st.experimental_rerun()
+                            st.rerun()
+
                     with c2:
                         st.caption(f"{idx + 1} / {num_images}")
                     with c3:
                         if st.button("▶", key=f"{prefix}_next_{listing_id}"):
                             st.session_state[img_key] = (idx + 1) % num_images
-                            st.experimental_rerun()
+                            st.rerun()
+
             else:
                 st.caption("No image")
 
@@ -114,7 +116,8 @@ def _listing_card(row, user, prefix: str):
                         ]
                     else:
                         st.session_state["liked_listing_ids"] = liked_ids + [listing_id]
-                    st.experimental_rerun()
+                    st.rerun()
+
 
             with col_cart:
                 cart_label = "Remove from cart" if in_cart else "Add to cart"
@@ -125,7 +128,8 @@ def _listing_card(row, user, prefix: str):
                         ]
                     else:
                         st.session_state["cart_listing_ids"] = cart_ids + [listing_id]
-                    st.experimental_rerun()
+                    st.rerun()
+
 
 
 def render(user):
