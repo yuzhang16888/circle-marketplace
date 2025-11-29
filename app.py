@@ -22,7 +22,7 @@ def main():
     
     page = st.sidebar.radio(
         "Go to",
-        ["Home", "Create Listing", "My Listings", "Profile / Settings", "Admin Dashboard"],
+        ["Home", "Create Listing", "My Listings", "Profile & Friends", "Admin Dashboard"],
         key="nav_page",
 )
 
@@ -33,7 +33,7 @@ def main():
         create_listing.render(user)
     elif page == "My Listings":
         my_listings.render(user)
-    elif page == "Profile / Settings":
+    elif page == "Profile & Friends":
         profile.render(user)
     elif page == "Admin Dashboard":
         admin_dashboard.render(user)
