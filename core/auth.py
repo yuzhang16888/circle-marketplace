@@ -4,6 +4,7 @@ import hashlib
 import binascii
 import streamlit as st
 import hmac
+from typing import Optional
 
 from core.db import (
     get_user_by_email,
@@ -23,7 +24,7 @@ def hash_password(password: str) -> str:
     dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100_000)
     return f"{binascii.hexlify(salt).decode()}${binascii.hexlify(dk).decode()}"
 
-def verify_password(password: str, stored: str | None) -> bool:
+def verify_password(password: str, Optional[str]) -> bool:
     if not stored:
         return False
     try:
@@ -167,7 +168,7 @@ def ensure_user_logged_in():
             if existing:
                 st.error("This email already has an account. Please switch to Log In.")
                 return None
-                
+
             invite = get_invite_by_code(invite_code.strip())
             if not invite:
                 st.error("Invalid invite code. Please check with your friend.")
