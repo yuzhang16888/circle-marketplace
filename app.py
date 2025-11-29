@@ -1,5 +1,5 @@
 # app.py
-from core.api_client import backend_ping
+from core.api_client import backend_ping,backend_db_ping
 import streamlit as st
 from core.db import init_db
 from core.auth import ensure_user_logged_in
@@ -19,13 +19,17 @@ def main():
     init_db()
     st.set_page_config(page_title="Circle Marketplace", layout="wide")
 
-    # Backend status check
+    # Backend status
     if backend_ping():
         st.sidebar.success("Backend: online ✅")
     else:
         st.sidebar.error("Backend: offline ❌")
 
-
+    # DB status (Supabase)
+    if backend_db_ping():
+        st.sidebar.success("DB: online ✅")
+    else:
+        st.sidebar.error("DB: offline ❌")
     # 2) Auth
     user = ensure_user_logged_in()
     if user is None:
