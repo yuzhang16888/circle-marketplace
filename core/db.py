@@ -82,6 +82,38 @@ def init_db():
         )
         """
     )
+        # ---------------- ORDERS ----------------
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            buyer_id INTEGER NOT NULL,
+            seller_id INTEGER NOT NULL,
+            listing_id INTEGER NOT NULL,
+            status TEXT NOT NULL,
+            total_price REAL NOT NULL,
+            shipping_name TEXT,
+            shipping_address1 TEXT,
+            shipping_address2 TEXT,
+            shipping_city TEXT,
+            shipping_state TEXT,
+            shipping_postal_code TEXT,
+            shipping_country TEXT,
+            shipping_phone TEXT,
+            payment_method TEXT,
+            buyer_note TEXT,
+            tracking_number TEXT,
+            carrier TEXT,
+            estimated_delivery_date TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (buyer_id) REFERENCES users(id),
+            FOREIGN KEY (seller_id) REFERENCES users(id),
+            FOREIGN KEY (listing_id) REFERENCES listings(id)
+        )
+        """
+    )
+
 
     # ---- Schema upgrade for existing DBs: add missing columns on users ----
     for col, col_def in [
