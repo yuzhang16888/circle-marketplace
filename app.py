@@ -20,10 +20,10 @@ def main():
     # 3) Navigation
     st.sidebar.title("Circle Marketplace")
     
-   page = st.sidebar.radio(
-    "Go to",
-    ["Home", "Create Listing", "My Listings", "Profile / Settings", "Admin Dashboard"],
-    key="nav_page",
+    page = st.sidebar.radio(
+        "Go to",
+        ["Home", "Create Listing", "My Listings", "Profile / Settings", "Admin Dashboard"],
+        key="nav_page",
 )
 
     # 4) Routing
