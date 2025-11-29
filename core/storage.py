@@ -5,7 +5,7 @@ from .config import UPLOAD_DIR
 from typing import Optional
 
 
-def _ensure_upload_dir(subdir: str | None = None) -> str:
+def _ensure_upload_dir(subdir: Optional[str] | None = None) -> str:
     base = UPLOAD_DIR
     if subdir:
         base = os.path.join(base, subdir)
