@@ -2,6 +2,7 @@
 import sqlite3
 import os
 import secrets
+import json
 from .config import DB_PATH
 
 
@@ -21,7 +22,7 @@ def init_db():
     conn = get_connection()
     cur = conn.cursor()
 
-    # Users table – full schema (CREATE IF NOT EXISTS won't add missing cols)
+    # ---------------- USERS ----------------
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
@@ -38,7 +39,7 @@ def init_db():
         """
     )
 
-    # Listings table
+    # ---------------- LISTINGS ----------------
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS listings (
@@ -54,7 +55,7 @@ def init_db():
         """
     )
 
-    # Friendships table
+    # ---------------- FRIENDSHIPS ----------------
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS friendships (
@@ -67,7 +68,7 @@ def init_db():
         """
     )
 
-    # Invites table
+    # ---------------- INVITES ----------------
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS invites (
@@ -92,8 +93,21 @@ def init_db():
         try:
             cur.execute(f"ALTER TABLE users ADD COLUMN {col} {col_def}")
         except sqlite3.OperationalError:
-            # Column already exists – ignore
-            pass
+            pass  # column already exists
+
+    # ---- Schema upgrade for existing DBs: add missing columns on listings ----
+    for col, col_def in [
+        ("brand", "TEXT"),
+        ("category", "TEXT"),
+        ("condition", "TEXT"),
+        ("retail_price", "REAL"),
+        ("image_paths", "TEXT"),
+        ("status", "TEXT"),  # e.g. 'draft' or 'published'
+    ]:
+        try:
+            cur.execute(f"ALTER TABLE listings ADD COLUMN {col} {col_def}")
+        except sqlite3.OperationalError:
+            pass  # column already exists
 
     conn.commit()
     conn.close()
@@ -144,7 +158,6 @@ def create_user(email, password_hash, first_name, last_name, phone, inviter_name
     conn = get_connection()
     cur = conn.cursor()
 
-    # Use first_name as display_name fallback, else email prefix
     base_display = first_name or email.split("@")[0]
 
     cur.execute(
@@ -171,16 +184,6 @@ def create_user(email, password_hash, first_name, last_name, phone, inviter_name
     conn.close()
     return user_id
 
-def update_user_password_hash(user_id: int, password_hash: str):
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute(
-        "UPDATE users SET password_hash = ? WHERE id = ?",
-        (password_hash, user_id),
-    )
-    conn.commit()
-    conn.close()
-
 
 def insert_user_if_not_exists(email, display_name=None):
     """
@@ -190,7 +193,6 @@ def insert_user_if_not_exists(email, display_name=None):
     existing = get_user_by_email(email)
     if existing:
         return existing["id"]
-    # Minimal create if somehow called
     return create_user(email, password_hash="", first_name=None, last_name=None, phone=None, inviter_name=None)
 
 
@@ -234,17 +236,69 @@ def update_user_profile_image(user_id: int, image_path: str):
     conn.close()
 
 
+def update_user_password_hash(user_id: int, password_hash: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (password_hash, user_id),
+    )
+    conn.commit()
+    conn.close()
+
+
 # ---------- LISTING HELPERS ----------
 
-def insert_listing(user_id, title, description, price, image_path=None):
+def insert_listing(
+    user_id,
+    title,
+    description,
+    price,
+    brand=None,
+    category=None,
+    condition=None,
+    retail_price=None,
+    image_paths=None,  # list of paths or None
+    status="published",
+):
+    """
+    Insert a new listing.
+
+    image_paths: list of file paths (will be JSON-serialized).
+    status: 'published' or 'draft'.
+    """
+    # Normalize image paths
+    if image_paths:
+        image_paths_json = json.dumps(image_paths)
+        main_image_path = image_paths[0]
+    else:
+        image_paths_json = None
+        main_image_path = None
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
         """
-        INSERT INTO listings (user_id, title, description, price, image_path)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO listings (
+            user_id, title, description, price,
+            image_path, brand, category, condition,
+            retail_price, image_paths, status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (user_id, title, description, price, image_path),
+        (
+            user_id,
+            title,
+            description,
+            price,
+            main_image_path,
+            brand,
+            category,
+            condition,
+            retail_price,
+            image_paths_json,
+            status,
+        ),
     )
     conn.commit()
     listing_id = cur.lastrowid
@@ -258,8 +312,19 @@ def get_listings_for_user(user_id):
     cur = conn.cursor()
     cur.execute(
         """
-        SELECT l.id, l.title, l.description, l.price,
-               l.image_path, l.created_at
+        SELECT
+            l.id,
+            l.title,
+            l.description,
+            l.price,
+            l.image_path,
+            l.created_at,
+            l.brand,
+            l.category,
+            l.condition,
+            l.retail_price,
+            l.image_paths,
+            l.status
         FROM listings l
         WHERE l.user_id = ?
         ORDER BY l.created_at DESC
@@ -272,16 +337,28 @@ def get_listings_for_user(user_id):
 
 
 def get_all_listings():
-    """Return all listings with seller display name."""
+    """Return all *published* listings with seller display name."""
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
         """
-        SELECT l.id, l.title, l.description, l.price,
-               l.image_path, l.created_at,
-               u.display_name AS seller_name
+        SELECT
+            l.id,
+            l.title,
+            l.description,
+            l.price,
+            l.image_path,
+            l.created_at,
+            l.brand,
+            l.category,
+            l.condition,
+            l.retail_price,
+            l.image_paths,
+            l.status,
+            u.display_name AS seller_name
         FROM listings l
         JOIN users u ON u.id = l.user_id
+        WHERE l.status IS NULL OR l.status = 'published'
         ORDER BY l.created_at DESC
         """
     )
@@ -305,7 +382,7 @@ def get_friend_ids(user_id):
 
 
 def get_friend_listings(user_id):
-    """Return listings only from the user's friends."""
+    """Return *published* listings only from the user's friends."""
     friend_ids = get_friend_ids(user_id)
     if not friend_ids:
         return []
@@ -315,12 +392,24 @@ def get_friend_listings(user_id):
 
     placeholders = ",".join("?" for _ in friend_ids)
     query = f"""
-        SELECT l.id, l.title, l.description, l.price,
-               l.image_path, l.created_at,
-               u.display_name AS seller_name
+        SELECT
+            l.id,
+            l.title,
+            l.description,
+            l.price,
+            l.image_path,
+            l.created_at,
+            l.brand,
+            l.category,
+            l.condition,
+            l.retail_price,
+            l.image_paths,
+            l.status,
+            u.display_name AS seller_name
         FROM listings l
         JOIN users u ON u.id = l.user_id
         WHERE l.user_id IN ({placeholders})
+          AND (l.status IS NULL OR l.status = 'published')
         ORDER BY l.created_at DESC
     """
 
@@ -380,8 +469,6 @@ def get_invite_codes_for_user(inviter_user_id: int):
         )
         rows = cur.fetchall()
     except sqlite3.OperationalError as e:
-        # If the invites table doesn't exist yet for some reason,
-        # fail gracefully and just return no codes.
         if "no such table" in str(e).lower():
             rows = []
         else:
