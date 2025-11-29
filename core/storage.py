@@ -2,6 +2,7 @@
 import os
 import time
 from .config import UPLOAD_DIR
+from typing import Optional
 
 
 def _ensure_upload_dir(subdir: str | None = None) -> str:
