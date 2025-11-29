@@ -15,7 +15,7 @@ def render(user):
             # Clear current user and rerun → will show login screen again
             if "user" in st.session_state:
                 del st.session_state["user"]
-            st.experimental_rerun()
+            st.rerun()  # ✅ use st.rerun() in modern Streamlit
 
     st.divider()
 
