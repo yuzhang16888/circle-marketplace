@@ -18,20 +18,24 @@ def main():
         st.stop()
 
     # 3) Navigation
-    st.sidebar.title("Circle Marketplace")
-    
+        # Ensure nav state exists
+    if "main_nav" not in st.session_state:
+        st.session_state["main_nav"] = "Home"
+
     page = st.sidebar.radio(
-        "Go to",
-        ["Home",
-         "Create Listing", 
-         "My Listings",
-         "Cart",
-         "Checkout",
-         "Profile & Friends", 
-         "Admin Dashboard",
-         ],
-        key="nav_page",
-)
+        "Navigation",
+        [
+            "Home",
+            "Create Listing",
+            "My Listings",
+            "Cart",
+            "Checkout",
+            "Admin Dashboard",
+            "Profile & Friends",
+        ],
+        key="main_nav",
+    )
+
 
     # 4) Routing
     if page == "Home":
