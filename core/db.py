@@ -1,6 +1,7 @@
 # core/db.py
 import sqlite3
 import os
+import secrets
 from .config import DB_PATH
 
 
@@ -14,7 +15,7 @@ def get_connection():
 def init_db():
     """
     Initialize DB tables if they don't exist.
-    IMPORTANT: we DO NOT drop tables here, so data persists across reruns.
+    We DO NOT drop tables here, so data persists across reruns.
     """
     conn = get_connection()
     cur = conn.cursor()
@@ -59,6 +60,19 @@ def init_db():
         """
     )
 
+    # Invites table
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS invites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            inviter_user_id INTEGER NOT NULL,
+            code TEXT UNIQUE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (inviter_user_id) REFERENCES users(id)
+        )
+        """
+    )
+
     conn.commit()
     conn.close()
 
@@ -85,6 +99,7 @@ def insert_user_if_not_exists(email, display_name=None):
     conn.close()
     return user_id
 
+
 def get_all_users():
     """Return all users in the system."""
     conn = get_connection()
@@ -99,6 +114,30 @@ def get_all_users():
     rows = cur.fetchall()
     conn.close()
     return rows
+
+
+def get_user_by_id(user_id: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT id, email, display_name FROM users WHERE id = ?",
+        (user_id,),
+    )
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+
+def update_user_display_name(user_id: int, display_name: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE users SET display_name = ? WHERE id = ?",
+        (display_name, user_id),
+    )
+    conn.commit()
+    conn.close()
+
 
 # ---------- LISTING HELPERS ----------
 
@@ -209,3 +248,40 @@ def add_friend(user_id, friend_user_id):
     )
     conn.commit()
     conn.close()
+
+
+# ---------- INVITE HELPERS ----------
+
+def create_invite_code(inviter_user_id: int) -> str:
+    """Generate and store a new invite code for this user."""
+    code = secrets.token_urlsafe(6)[:8]  # short, shareable
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO invites (inviter_user_id, code)
+        VALUES (?, ?)
+        """,
+        (inviter_user_id, code),
+    )
+    conn.commit()
+    conn.close()
+    return code
+
+
+def get_invite_codes_for_user(inviter_user_id: int):
+    """Return all invite codes created by this user."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT code, created_at
+        FROM invites
+        WHERE inviter_user_id = ?
+        ORDER BY created_at DESC
+        """,
+        (inviter_user_id,),
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return rows
