@@ -182,6 +182,33 @@ def render(user):
 
     st.divider()
 
+        st.divider()
+
+    # ---- SECURITY / PASSWORD ----
+    st.subheader("Security")
+
+    with st.expander("Change password", expanded=False):
+        current_pw = st.text_input("Current password", type="password", key="pw_current")
+        new_pw = st.text_input("New password", type="password", key="pw_new")
+        new_pw_confirm = st.text_input("Confirm new password", type="password", key="pw_new_confirm")
+
+        if st.button("Update Password"):
+            if not current_pw or not new_pw or not new_pw_confirm:
+                st.error("Please fill in all password fields.")
+            elif new_pw != new_pw_confirm:
+                st.error("New passwords do not match.")
+            elif len(new_pw) < 8:
+                st.error("New password must be at least 8 characters long.")
+            else:
+                # Verify current password
+                if not verify_password(current_pw, db_user["password_hash"]):
+                    st.error("Current password is incorrect.")
+                else:
+                    new_hash = hash_password(new_pw)
+                    update_user_password_hash(user["id"], new_hash)
+                    st.success("Your password has been updated successfully.")
+
+
     # ---- SUSPICIOUS REPORT ----
     st.subheader("Safety Center")
 
