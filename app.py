@@ -47,7 +47,7 @@ def main():
     elif page == "Cart":
         cart.render(user)
     elif page=="Checkout":
-        checkoout.render(user)
+        checkout.render(user)
     elif page == "Profile & Friends":
         profile.render(user)
     elif page == "Admin Dashboard":
