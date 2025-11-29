@@ -34,9 +34,9 @@ def _get_image_list(row):
     return paths
 
 
-def _listing_card(row, user):
+def _listing_card(row, user, prefix: str):
     listing_id = row["id"]
-    img_key = f"img_idx_{listing_id}"
+    img_key = f"{prefix}_img_idx_{listing_id}"
 
     # Initialize carousel index
     if img_key not in st.session_state:
@@ -74,13 +74,13 @@ def _listing_card(row, user):
                 if num_images > 1:
                     c1, c2, c3 = st.columns([1, 1, 1])
                     with c1:
-                        if st.button("◀", key=f"prev_{listing_id}"):
+                        if st.button("◀", key=f"{prefix}_prev_{listing_id}"):
                             st.session_state[img_key] = (idx - 1) % num_images
                             st.experimental_rerun()
                     with c2:
                         st.caption(f"{idx + 1} / {num_images}")
                     with c3:
-                        if st.button("▶", key=f"next_{listing_id}"):
+                        if st.button("▶", key=f"{prefix}_next_{listing_id}"):
                             st.session_state[img_key] = (idx + 1) % num_images
                             st.experimental_rerun()
             else:
@@ -107,7 +107,7 @@ def _listing_card(row, user):
 
             with col_like:
                 like_label = "❤️ Liked" if liked else "🤍 Like"
-                if st.button(like_label, key=f"like_{listing_id}"):
+                if st.button(like_label, key=f"{prefix}_like_{listing_id}"):
                     if liked:
                         st.session_state["liked_listing_ids"] = [
                             x for x in liked_ids if x != listing_id
@@ -118,7 +118,7 @@ def _listing_card(row, user):
 
             with col_cart:
                 cart_label = "Remove from cart" if in_cart else "Add to cart"
-                if st.button(cart_label, key=f"cart_{listing_id}"):
+                if st.button(cart_label, key=f"{prefix}_cart_{listing_id}"):
                     if in_cart:
                         st.session_state["cart_listing_ids"] = [
                             x for x in cart_ids if x != listing_id
@@ -163,7 +163,7 @@ def render(user):
         st.info("No listings from friends yet. Once you add friends, their items will show up here.")
     else:
         for row in friend_listings:
-            _listing_card(row, user)
+            _listing_card(row, user, prefix="friend")
 
     st.divider()
 
@@ -176,4 +176,4 @@ def render(user):
         return
 
     for row in all_listings:
-        _listing_card(row, user)
+        _listing_card(row, user, prefix="all")
