@@ -11,10 +11,8 @@ def _format_meta(row):
         bits.append(str(row["category"]))
     if row["condition"]:
         bits.append(str(row["condition"]))
-    if bits:
-        return " · ".join(bits)
-    return None
-
+    return " · ".join(bits) if bits else None
+s
 
 def _listing_card(row, show_seller=True):
     with st.container(border=True):
@@ -36,13 +34,15 @@ def _listing_card(row, show_seller=True):
             if meta:
                 st.caption(meta)
 
-            if row.get("retail_price"):
-                st.caption(f"Original retail: ${row['retail_price']:.0f}")
+            if row["retail_price"] is not None:
+                st.caption(f"Original retail: ${float(row['retail_price']):.0f}")
+
+
 
             st.write(row["description"])
 
             if show_seller:
-                seller = row["seller_name"] or "Unknown"
+                seller = row["seller_name"] if row["seller_name"] else "Unknown"
                 st.caption(f"Seller: {seller} • Created: {row['created_at']}")
             else:
                 st.caption(f"Created: {row['created_at']}")
