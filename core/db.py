@@ -286,20 +286,31 @@ def create_invite_code(inviter_user_id: int) -> str:
 
 
 def get_invite_codes_for_user(inviter_user_id: int):
-    """Return all invite codes created by this user."""
+    """Return all invite codes created by this user. Safe even if table is missing."""
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute(
-        """
-        SELECT code, created_at
-        FROM invites
-        WHERE inviter_user_id = ?
-        ORDER BY created_at DESC
-        """
-    )
-    rows = cur.fetchall()
-    conn.close()
+    try:
+        cur.execute(
+            """
+            SELECT code, created_at
+            FROM invites
+            WHERE inviter_user_id = ?
+            ORDER BY created_at DESC
+            """,
+            (inviter_user_id,),
+        )
+        rows = cur.fetchall()
+    except sqlite3.OperationalError as e:
+        # If the invites table doesn't exist yet for some reason,
+        # fail gracefully and just return no codes.
+        if "no such table" in str(e).lower():
+            rows = []
+        else:
+            raise
+    finally:
+        conn.close()
     return rows
+
 
 
 def get_invite_by_code(code: str):
