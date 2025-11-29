@@ -1,37 +1,48 @@
 # backend/db.py
-import os
-import psycopg2
-import psycopg2.extras
+import sqlite3
+from pathlib import Path
 
-# We'll read the connection string from an environment variable
-DB_URL = os.environ.get("SUPABASE_DB_URL")
-
-if not DB_URL:
-    raise RuntimeError(
-        "SUPABASE_DB_URL is not set. "
-        "Set it to your Supabase Postgres connection string."
-    )
+# Path to your existing SQLite database (circle.db in project root)
+BASE_DIR = Path(__file__).resolve().parent.parent
+DB_PATH = BASE_DIR / "circle.db"
 
 
 def get_connection():
     """
-    Open a new database connection.
-    Uses a dict-like cursor so rows come back as dicts.
+    Open a connection to the local SQLite DB.
+    Rows will be dict-like (sqlite3.Row).
     """
-    conn = psycopg2.connect(
-        DB_URL,
-        cursor_factory=psycopg2.extras.RealDictCursor,
-    )
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     return conn
 
 
 def get_users_count() -> int:
     """
-    Simple test query: how many users are in the users table?
+    Simple test query: how many users in the users table?
+    If the users table doesn't exist yet, create it and return 0.
     """
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) AS count FROM public.users;")
+
+    # Ensure users table exists (minimal schema for now)
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            full_name TEXT,
+            is_verified INTEGER NOT NULL DEFAULT 0,
+            invited_by_id INTEGER,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+    )
+
+    # Now count rows
+    cur.execute("SELECT COUNT(*) AS count FROM users;")
     row = cur.fetchone()
     cur.close()
     conn.close()
