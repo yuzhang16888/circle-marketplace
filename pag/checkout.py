@@ -165,42 +165,44 @@ def render(user):
         return
 
     # ---------- CREATE ORDER ----------
-    buyer_id = user["id"]
-    total_price = price  # no fees yet in MVP
+# ---------- CREATE ORDER ----------
+buyer_id = user["id"]
+total_price = price  # no fees yet in MVP
 
-    order_id = create_order(
-        buyer_id=buyer_id,
-        seller_id=seller_id,
-        listing_id=listing_id,
-        total_price=total_price,
-        shipping_name=full_name.strip(),
-        shipping_address1=address1.strip(),
-        shipping_address2=address2.strip(),
-        shipping_city=city.strip(),
-        shipping_state=state.strip(),
-        shipping_postal_code=postal_code_clean,
-        shipping_country=country,
-        shipping_phone=formatted_phone,
-        payment_method=payment_method,
-        buyer_note=buyer_note.strip(),
-    )
+order_id = create_order(
+    buyer_id=buyer_id,
+    seller_id=seller_id,
+    listing_id=listing_id,
+    total_price=total_price,
+    shipping_name=full_name.strip(),
+    shipping_address1=address1.strip(),
+    shipping_address2=address2.strip(),
+    shipping_city=city.strip(),
+    shipping_state=state.strip(),
+    shipping_postal_code=postal_code_clean,
+    shipping_country=country,
+    shipping_phone=formatted_phone,
+    payment_method=payment_method,
+    buyer_note=buyer_note.strip(),
+)
 
-    # Mark listing as reserved so it disappears from public feed
-    update_listing_status(seller_id, listing_id, "reserved")
+# Mark listing as reserved so it disappears from public feed
+update_listing_status(listing_id, "reserved")
 
-    # Remove from cart
-    if "cart_listing_ids" in st.session_state:
-        st.session_state["cart_listing_ids"] = [
-            x for x in st.session_state["cart_listing_ids"] if x != listing_id
-        ]
+# Remove from cart
+if "cart_listing_ids" in st.session_state:
+    st.session_state["cart_listing_ids"] = [
+        x for x in st.session_state["cart_listing_ids"] if x != listing_id
+    ]
 
-    # Clear checkout selection
-    st.session_state["checkout_listing_id"] = None
+# Clear checkout selection
+st.session_state["checkout_listing_id"] = None
 
-    st.success(f"Your order has been placed! (Order ID: {order_id})")
+# ------------------ SUCCESS MESSAGES ------------------
+st.success("🎉 Order placed successfully!")
+st.info("We will email you as soon as the seller ships your item.")
 
-    st.info(
-        "Next steps:\n"
-        "- The seller will see this order in their dashboard and arrange payment & shipping.\n"
-        "- In a future version, Circle will handle secure payments and tracking automatically."
-    )
+# Optionally redirect them home after confirmation
+if st.button("Return to Home"):
+    st.session_state["main_nav"] = "Home"
+    st.rerun()
