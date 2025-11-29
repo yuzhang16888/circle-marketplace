@@ -171,6 +171,16 @@ def create_user(email, password_hash, first_name, last_name, phone, inviter_name
     conn.close()
     return user_id
 
+def update_user_password_hash(user_id: int, password_hash: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE users SET password_hash = ? WHERE id = ?",
+        (password_hash, user_id),
+    )
+    conn.commit()
+    conn.close()
+
 
 def insert_user_if_not_exists(email, display_name=None):
     """
