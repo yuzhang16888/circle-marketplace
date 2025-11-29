@@ -186,7 +186,8 @@ def render(user):
     )
 
     # Mark listing as reserved so it disappears from public feed
-    update_listing_status(seller_id, listing_id, "reserved")
+    update_listing_status(#seller_id, 
+    listing_id, "reserved")
 
     # Remove from cart
     if "cart_listing_ids" in st.session_state:
