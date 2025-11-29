@@ -38,7 +38,6 @@ def _get_image_list(row):
 
     return paths
 
-
 def render(user):
     st.header("Checkout")
 
@@ -105,7 +104,11 @@ def render(user):
         if country == "United States":
             state = st.selectbox("State", US_STATES, index=US_STATES.index("CA"))
         else:
-            state = st.selectbox("Province / Territory", CA_PROVINCES, index=CA_PROVINCES.index("ON"))
+            state = st.selectbox(
+                "Province / Territory",
+                CA_PROVINCES,
+                index=CA_PROVINCES.index("ON"),
+            )
 
         postal_code = st.text_input("ZIP / Postal code", value="")
 
@@ -128,6 +131,7 @@ def render(user):
 
         submitted = st.form_submit_button("Place order")
 
+    # If user hasn't submitted yet, stop here
     if not submitted:
         return
 
@@ -147,9 +151,10 @@ def render(user):
         if not (postal_code_clean.isdigit() and len(postal_code_clean) == 5):
             errors.append("For US addresses, ZIP code must be exactly 5 digits.")
     else:  # Canada
-        # Simple check: 6 characters (A1A1A1 style). We keep it len-based for MVP.
         if len(postal_code_clean) != 6:
-            errors.append("For Canada, postal code should be 6 characters (e.g., A1A1A1).")
+            errors.append(
+                "For Canada, postal code should be 6 characters (e.g., A1A1A1)."
+            )
 
     # Phone normalization: US/Canada 10 digits
     digits = "".join(ch for ch in phone_raw if ch.isdigit())
@@ -165,44 +170,43 @@ def render(user):
         return
 
     # ---------- CREATE ORDER ----------
-# ---------- CREATE ORDER ----------
-buyer_id = user["id"]
-total_price = price  # no fees yet in MVP
+    buyer_id = user["id"]
+    total_price = price  # no fees yet in MVP
 
-order_id = create_order(
-    buyer_id=buyer_id,
-    seller_id=seller_id,
-    listing_id=listing_id,
-    total_price=total_price,
-    shipping_name=full_name.strip(),
-    shipping_address1=address1.strip(),
-    shipping_address2=address2.strip(),
-    shipping_city=city.strip(),
-    shipping_state=state.strip(),
-    shipping_postal_code=postal_code_clean,
-    shipping_country=country,
-    shipping_phone=formatted_phone,
-    payment_method=payment_method,
-    buyer_note=buyer_note.strip(),
-)
+    order_id = create_order(
+        buyer_id=buyer_id,
+        seller_id=seller_id,
+        listing_id=listing_id,
+        total_price=total_price,
+        shipping_name=full_name.strip(),
+        shipping_address1=address1.strip(),
+        shipping_address2=address2.strip(),
+        shipping_city=city.strip(),
+        shipping_state=state.strip(),
+        shipping_postal_code=postal_code_clean,
+        shipping_country=country,
+        shipping_phone=formatted_phone,
+        payment_method=payment_method,
+        buyer_note=buyer_note.strip(),
+    )
 
-# Mark listing as reserved so it disappears from public feed
-update_listing_status(listing_id, "reserved")
+    # Mark listing as reserved so it disappears from public feed
+    update_listing_status(listing_id, "reserved")
 
-# Remove from cart
-if "cart_listing_ids" in st.session_state:
-    st.session_state["cart_listing_ids"] = [
-        x for x in st.session_state["cart_listing_ids"] if x != listing_id
-    ]
+    # Remove from cart
+    if "cart_listing_ids" in st.session_state:
+        st.session_state["cart_listing_ids"] = [
+            x for x in st.session_state["cart_listing_ids"] if x != listing_id
+        ]
 
-# Clear checkout selection
-st.session_state["checkout_listing_id"] = None
+    # Clear checkout selection
+    st.session_state["checkout_listing_id"] = None
 
-# ------------------ SUCCESS MESSAGES ------------------
-st.success("🎉 Order placed successfully!")
-st.info("We will email you as soon as the seller ships your item.")
+    # ------------------ SUCCESS MESSAGES ------------------
+    st.success("🎉 Order placed successfully!")
+    st.info("We will email you when the seller ships your item.")
 
-# Optionally redirect them home after confirmation
-if st.button("Return to Home"):
-    st.session_state["main_nav"] = "Home"
-    st.rerun()
+    # Optional: button to go back home
+    if st.button("Return to Home"):
+        st.session_state["main_nav"] = "Home"
+        st.rerun()
