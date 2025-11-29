@@ -12,7 +12,7 @@ def _format_meta(row):
     if row["condition"]:
         bits.append(str(row["condition"]))
     return " · ".join(bits) if bits else None
-s
+
 
 def _listing_card(row, show_seller=True):
     with st.container(border=True):
