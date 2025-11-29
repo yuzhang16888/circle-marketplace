@@ -24,7 +24,7 @@ def hash_password(password: str) -> str:
     dk = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100_000)
     return f"{binascii.hexlify(salt).decode()}${binascii.hexlify(dk).decode()}"
 
-def verify_password(password: str, Optional[str]) -> bool:
+def verify_password(password: str,  stored: Optional[str]) -> bool:
     if not stored:
         return False
     try:
