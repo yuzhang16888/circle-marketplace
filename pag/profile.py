@@ -182,7 +182,8 @@ def render(user):
 
     st.divider()
 
-        st.divider()
+
+
 
     # ---- SECURITY / PASSWORD ----
     st.subheader("Security")
@@ -207,6 +208,8 @@ def render(user):
                     new_hash = hash_password(new_pw)
                     update_user_password_hash(user["id"], new_hash)
                     st.success("Your password has been updated successfully.")
+
+    
 
 
     # ---- SUSPICIOUS REPORT ----
