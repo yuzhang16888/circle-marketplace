@@ -25,7 +25,7 @@ def main():
         ["Home",
          "Create Listing", 
          "My Listings",
-         "Cart"
+         "Cart",
          "Profile & Friends", 
          "Admin Dashboard",
          ],
