@@ -16,6 +16,38 @@ def _format_meta(row):
     return None
 
 
+def _listing_card(row, show_seller=True):
+    with st.container(border=True):
+        col_img, col_text = st.columns([1, 2])
+
+        with col_img:
+            if row["image_path"]:
+                try:
+                    st.image(row["image_path"], width=220)
+                except Exception:
+                    st.caption("Image not available.")
+            else:
+                st.caption("No image")
+
+        with col_text:
+            st.markdown(f"**{row['title']}** – ${row['price']:.0f}")
+
+            meta = _format_meta(row)
+            if meta:
+                st.caption(meta)
+
+            if row.get("retail_price"):
+                st.caption(f"Original retail: ${row['retail_price']:.0f}")
+
+            st.write(row["description"])
+
+            if show_seller:
+                seller = row["seller_name"] or "Unknown"
+                st.caption(f"Seller: {seller} • Created: {row['created_at']}")
+            else:
+                st.caption(f"Created: {row['created_at']}")
+
+
 def render(user):
     st.header("Circle Marketplace – Home (Friends + All Listings)")
 
@@ -39,23 +71,7 @@ def render(user):
         st.info("No listings from friends yet. Once you add friends, their items will show up here.")
     else:
         for row in friend_listings:
-            with st.container(border=True):
-                st.markdown(f"**{row['title']}** – ${row['price']:.0f}")
-
-                meta = _format_meta(row)
-                if meta:
-                    st.caption(meta)
-
-                st.write(row["description"])
-
-                if row["image_path"]:
-                    try:
-                        st.image(row["image_path"], use_container_width=True)
-                    except Exception:
-                        st.caption("Image not available.")
-
-                seller = row["seller_name"] or "Unknown"
-                st.caption(f"Seller: {seller} • Created: {row['created_at']}")
+            _listing_card(row, show_seller=True)
 
     st.divider()
 
@@ -68,23 +84,4 @@ def render(user):
         return
 
     for row in all_listings:
-        with st.container(border=True):
-            st.markdown(f"**{row['title']}** – ${row['price']:.0f}")
-
-            meta = _format_meta(row)
-            if meta:
-                st.caption(meta)
-
-            if row["retail_price"]:
-                st.caption(f"Original retail: ${row['retail_price']:.0f}")
-
-            st.write(row["description"])
-
-            if row["image_path"]:
-                try:
-                    st.image(row["image_path"], use_container_width=True)
-                except Exception:
-                    st.caption("Image not available.")
-
-            seller = row["seller_name"] or "Unknown"
-            st.caption(f"Seller: {seller} • Created: {row['created_at']}")
+        _listing_card(row, show_seller=True)
