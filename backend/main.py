@@ -47,6 +47,10 @@ class RegisterRequest(BaseModel):
     password: str
     full_name: Optional[str] = None   # ✅ 3.9-safe
 
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
 
 @app.post("/auth/register")
 def register(payload: RegisterRequest):
@@ -62,6 +66,38 @@ def register(payload: RegisterRequest):
     user_id = create_user(email=email, password=password, full_name=payload.full_name)
     return {"status": "ok", "user_id": user_id}
 
+from backend.db import (
+    get_users_count,
+    create_user,
+    get_user_by_email,
+    verify_password,
+)
+
+@app.post("/auth/login")
+def login(payload: LoginRequest):
+    email = payload.email.strip().lower()
+    password = payload.password.strip()
+
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email and password are required.")
+
+    user = get_user_by_email(email)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+    stored_hash = user["password_hash"]
+    if not verify_password(password, stored_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+    # For now just return basic user info; later we can add JWT / session token
+    return {
+        "status": "ok",
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "full_name": user["full_name"],
+        },
+    }
 
 
 class RegisterRequest(BaseModel):
