@@ -1,5 +1,7 @@
 # backend/notifications.py
 
+# backend/notifications.py
+
 def send_email(to_email: str, subject: str, body: str):
     """
     Placeholder email sender for MVP.
@@ -11,3 +13,4 @@ def send_email(to_email: str, subject: str, body: str):
     print("Body:")
     print(body)
     print("=== END EMAIL ===")
+
