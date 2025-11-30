@@ -19,8 +19,9 @@ def render(user: Dict):
 
     col_left, col_right = st.columns([2, 3])
 
+
     # -------- LEFT: create invites --------
-        with col_left:
+    with col_left:
         st.subheader("Invite a friend to Circle")
 
         invite_name = st.text_input("Friend's name", key="invite_name_admin")
@@ -46,7 +47,7 @@ def render(user: Dict):
             "Invite only people you personally trust and would vouch for. "
             "They can sign up using this email address."
         )
-
+    
     # -------- RIGHT: list existing invites --------
     with col_right:
         st.subheader("Existing invites")
