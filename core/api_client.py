@@ -52,15 +52,22 @@ def login_user(email: str, password: str):
 
 
 # --------- Invites (for step B) ---------
-def create_invite(email: str, invited_by_id: Optional[int] = None):
+from typing import Optional
+
+def create_invite(email: str, name: Optional[str] = None, invited_by_id: Optional[int] = None):
     payload = {
         "email": email,
+        "name": name,
         "invited_by_id": invited_by_id,
     }
     r = requests.post(_url("/invites/create"), json=payload, timeout=5)
     r.raise_for_status()
     return r.json()
 
+def list_invites_by_inviter(invited_by_id: int):
+    r = requests.get(_url(f"/invites/by_inviter/{invited_by_id}"), timeout=5)
+    r.raise_for_status()
+    return r.json()
 
 def list_invites():
     r = requests.get(_url("/invites"), timeout=5)

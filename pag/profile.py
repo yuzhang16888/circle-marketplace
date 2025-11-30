@@ -2,6 +2,7 @@
 import streamlit as st
 from typing import Optional
 from core.auth import get_current_user, logout
+from core import api_client
 
 
 def render(user: Optional[dict] = None):
@@ -34,6 +35,50 @@ def render(user: Optional[dict] = None):
         logout()
         st.success("You have been logged out.")
         st.experimental_rerun()
+     
+    #st.markdown("---")
+    #st.caption("More profile and friend features coming soon ✨")
+        st.markdown("---")
+    st.subheader("Invite friends to Circle")
 
-    st.markdown("---")
-    st.caption("More profile and friend features coming soon ✨")
+    with st.form("profile_invite_form"):
+        friend_name = st.text_input("Friend's name", key="prof_invite_name")
+        friend_email = st.text_input("Friend's email", key="prof_invite_email")
+        submitted = st.form_submit_button("Send invite")
+
+    if submitted:
+        if not friend_email:
+            st.error("Please enter your friend's email.")
+        else:
+            try:
+                api_client.create_invite(
+                    email=friend_email,
+                    name=friend_name,
+                    invited_by_id=user["id"],
+                )
+                st.success(f"Invitation sent to {friend_email}.")
+            except Exception as e:
+                st.error(f"Failed to send invite: {e}")
+
+    st.subheader("People you've invited")
+
+    try:
+        data = api_client.list_invites_by_inviter(user["id"])
+        invites = data.get("invites", [])
+        if not invites:
+            st.info("You haven't invited anyone yet.")
+        else:
+            rows = []
+            for inv in invites:
+                status = "Joined" if inv.get("used_by_user_id") else "Pending"
+                rows.append(
+                    {
+                        "Email": inv.get("email"),
+                        "Status": status,
+                        "Invited at": inv.get("created_at"),
+                    }
+                )
+            st.table(rows)
+    except Exception as e:
+        st.error(f"Could not load your invites: {e}")
+

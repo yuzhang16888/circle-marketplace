@@ -12,6 +12,8 @@ from backend.db import (
     create_invite,
     get_invite_for_email,
     mark_invite_used,
+    get_invites_by_inviter,
+
 )
 
 from backend.notifications import send_email
@@ -27,6 +29,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@app.get("/invites/by_inviter/{invited_by_id}")
+def invites_by_inviter(invited_by_id: int):
+    rows = get_invites_by_inviter(invited_by_id)
+    return {
+        "status": "ok",
+        "invites": [dict(r) for r in rows],
+    }
 
 @app.get("/ping")
 def ping():
@@ -64,16 +73,22 @@ class LoginRequest(BaseModel):
 
 class InviteCreateRequest(BaseModel):
     email: str
+    name: Optional[str] = None 
     invited_by_id: Optional[int] = None
 
 
 @app.post("/invites/create")
 def invites_create(payload: InviteCreateRequest):
     email = payload.email.strip().lower()
+    name = (payload.name or "").strip()
+    invited_by_id = payload.invited_by_id
+
     if not email:
         raise HTTPException(status_code=400, detail="Email is required.")
 
     invite_id = create_invite(email=email, invited_by_id=payload.invited_by_id)
+
+    greeting_name = name if name else "there"
 
     # Send "invite" email (console only for now)
     # inside create_invite() AFTER invite creation:

@@ -11,7 +11,7 @@ NAV_PAGES = [
     "My Listings",
     "Cart",
     "Checkout",
-    "Admin Dashboard",
+   # "Admin Dashboard",
     "Profile & Friends",
 ]
 
@@ -34,6 +34,34 @@ def main():
     user = ensure_user_logged_in()
     if user is None:
         st.stop()
+        # 3) Navigation – build nav based on user role
+    # start from base pages
+    nav_pages = list(BASE_NAV_PAGES)
+
+    # only founder sees Admin Dashboard
+    if user.get("email") == "yuzhang16888@gmail.com":
+        # insert before Profile & Friends
+        insert_index = nav_pages.index("Profile & Friends")
+        nav_pages.insert(insert_index, "Admin Dashboard")
+
+    if "main_nav" not in st.session_state:
+        st.session_state["main_nav"] = "Home"
+
+    # make sure current nav is valid
+    if st.session_state["main_nav"] not in nav_pages:
+        st.session_state["main_nav"] = "Home"
+
+    current_index = nav_pages.index(st.session_state["main_nav"])
+
+    page = st.sidebar.radio(
+        "Navigation",
+        nav_pages,
+        index=current_index,
+        key="nav_widget",
+    )
+
+    if page != st.session_state["main_nav"]:
+        st.session_state["main_nav"] = page
 
     # 3) Navigation – our own nav state
     if "main_nav" not in st.session_state:

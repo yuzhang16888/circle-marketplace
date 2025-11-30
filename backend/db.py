@@ -17,6 +17,24 @@ def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+from typing import Optional
+
+def get_invites_by_inviter(invited_by_id: int):
+    ensure_invites_table()
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id, email, invited_by_id, used_by_user_id, created_at, used_at
+        FROM invites
+        WHERE invited_by_id = %s
+        ORDER BY created_at DESC
+        """,
+        (invited_by_id,),
+    )
+    rows = cur.fetchall()
+    conn.close()
+    return rows
 
 
 def ensure_users_table():

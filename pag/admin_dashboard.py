@@ -20,18 +20,20 @@ def render(user: Dict):
     col_left, col_right = st.columns([2, 3])
 
     # -------- LEFT: create invites --------
-    with col_left:
+       with col_left:
         st.subheader("Invite a friend to Circle")
 
-        invite_email = st.text_input("Friend's email", key="invite_email")
+        invite_name = st.text_input("Friend's name", key="invite_name_admin")
+        invite_email = st.text_input("Friend's email", key="invite_email_admin")
 
-        if st.button("Create invite", key="invite_button"):
+        if st.button("Create invite", key="invite_button_admin"):
             if not invite_email:
                 st.error("Please enter an email.")
             else:
                 try:
                     resp = api_client.create_invite(
-                        invite_email,
+                        email=invite_email,
+                        name=invite_name,
                         invited_by_id=user.get("id"),
                     )
                     st.success(
@@ -41,8 +43,8 @@ def render(user: Dict):
                     st.error(f"Failed to create invite: {e}")
 
         st.caption(
-            "Anyone you invite can sign up using that exact email address. "
-            "Uninvited emails will be blocked at signup."
+            "Invite only people you personally trust and would vouch for. "
+            "They can sign up using this email address."
         )
 
     # -------- RIGHT: list existing invites --------
