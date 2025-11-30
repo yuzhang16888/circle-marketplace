@@ -1,7 +1,7 @@
 # pag/admin_dashboard.py
 import streamlit as st
 from core.db import get_all_users, get_friend_ids, add_friend
-
+from core import api_client
 
 def render(user):
     st.header("Admin Dashboard – Friend Manager")
@@ -11,7 +11,7 @@ def render(user):
     )
 
     st.divider()
-
+    col_left, col_right = st.columns([3, 2])
     # ----- Load users & friends -----
     all_users = get_all_users()
     friend_ids = set(get_friend_ids(user["id"]))
@@ -21,8 +21,8 @@ def render(user):
 
     col_left, col_right = st.columns(2)
 
-    import streamlit as st
-from core import api_client
+
+
 
 def render(user):
     st.header("Admin Dashboard")
