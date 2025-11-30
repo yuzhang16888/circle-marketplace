@@ -30,24 +30,24 @@ def main():
         st.sidebar.success("DB: online ✅")
     else:
         st.sidebar.error("DB: offline ❌")
+
     # 2) Auth
     user = ensure_user_logged_in()
     if user is None:
         st.stop()
-        # 3) Navigation – build nav based on user role
-    # start from base pages
+
+    # 3) Navigation – build nav based on user role
     nav_pages = list(BASE_NAV_PAGES)
 
-    # only founder sees Admin Dashboard
+    # Only founder sees Admin Dashboard
     if user.get("email") == "yuzhang16888@gmail.com":
-        # insert before Profile & Friends
         insert_index = nav_pages.index("Profile & Friends")
         nav_pages.insert(insert_index, "Admin Dashboard")
 
+    # Ensure nav state exists & is valid
     if "main_nav" not in st.session_state:
         st.session_state["main_nav"] = "Home"
 
-    # make sure current nav is valid
     if st.session_state["main_nav"] not in nav_pages:
         st.session_state["main_nav"] = "Home"
 
@@ -63,25 +63,7 @@ def main():
     if page != st.session_state["main_nav"]:
         st.session_state["main_nav"] = page
 
-    # 3) Navigation – our own nav state
-    if "main_nav" not in st.session_state:
-        st.session_state["main_nav"] = "Home"
-
-    # keep widget key separate from our internal key
-    current_index = NAV_PAGES.index(st.session_state["main_nav"])
-
-    page = st.sidebar.radio(
-        "Navigation",
-        NAV_PAGES,
-        index=current_index,
-        key="nav_widget",           # 🔴 changed: no longer "main_nav"
-    )
-
-    # sync widget selection back into our nav state
-    if page != st.session_state["main_nav"]:
-        st.session_state["main_nav"] = page
-
-    # route based on our own nav state
+    # Route based on our nav state
     if st.session_state["main_nav"] == "Home":
         home.render(user)
     elif st.session_state["main_nav"] == "Create Listing":
@@ -96,6 +78,7 @@ def main():
         admin_dashboard.render(user)
     elif st.session_state["main_nav"] == "Profile & Friends":
         profile.render(user)
+
 
 if __name__ == "__main__":
     main()
