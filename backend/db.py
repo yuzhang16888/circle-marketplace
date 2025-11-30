@@ -56,6 +56,78 @@ def get_users_count() -> int:
     conn.close()
     return row["count"]
 
+def ensure_invites_table():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS invites (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
+            invited_by_id INTEGER,
+            used_by_user_id INTEGER,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            used_at TEXT
+        );
+        """
+    )
+    conn.commit()
+    conn.close()
+
+
+def create_invite(email: str, invited_by_id: Optional[int] = None) -> int:
+    ensure_invites_table()
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO invites (email, invited_by_id)
+        VALUES (?, ?)
+        """,
+        (email.lower().strip(), invited_by_id),
+    )
+    conn.commit()
+    invite_id = cur.lastrowid
+    conn.close()
+    return invite_id
+
+
+def get_invite_for_email(email: str):
+    """
+    Return an unused invite row for this email, or None.
+    """
+    ensure_invites_table()
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT * FROM invites
+        WHERE email = ? AND used_by_user_id IS NULL
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (email.lower().strip(),),
+    )
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+
+def mark_invite_used(invite_id: int, user_id: int):
+    ensure_invites_table()
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE invites
+        SET used_by_user_id = ?, used_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (user_id, invite_id),
+    )
+    conn.commit()
+    conn.close()
+
 
 def hash_password(password: str) -> str:
     """
