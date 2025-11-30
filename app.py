@@ -5,7 +5,7 @@ from core.db import init_db
 from core.auth import ensure_user_logged_in
 from pag import home, create_listing, my_listings, admin_dashboard, profile, cart, checkout
 
-NAV_PAGES = [
+BASE_NAV_PAGES = [
     "Home",
     "Create Listing",
     "My Listings",
