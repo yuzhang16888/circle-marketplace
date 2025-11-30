@@ -21,6 +21,41 @@ def render(user):
 
     col_left, col_right = st.columns(2)
 
+    import streamlit as st
+from core import api_client
+
+def render(user):
+    st.header("Admin Dashboard")
+
+    # ... your existing admin UI (orders, listings, etc.) ...
+
+    st.subheader("Invite a friend to Circle")
+
+    invite_email = st.text_input("Friend's email", key="invite_email")
+
+    if st.button("Create invite", key="invite_button"):
+        if not invite_email:
+            st.error("Please enter an email.")
+        else:
+            try:
+                resp = api_client.create_invite(invite_email, invited_by_id=user["id"])
+                st.success(f"Invite created for {invite_email} (ID: {resp['invite_id']}).")
+            except Exception as e:
+                st.error(f"Failed to create invite: {e}")
+
+    # Optional: show recent invites
+    if st.checkbox("Show all invites", key="show_invites"):
+        try:
+            data = api_client.list_invites()
+            invites = data.get("invites", [])
+            if not invites:
+                st.info("No invites yet.")
+            else:
+                st.table(invites)
+        except Exception as e:
+            st.error(f"Failed to load invites: {e}")
+
+
     # ----- LEFT: all users (add as friend) -----
     with col_left:
         st.subheader("All Users")
