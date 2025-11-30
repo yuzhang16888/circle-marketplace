@@ -43,7 +43,7 @@ def ensure_user_logged_in() -> Optional[dict]:
                     resp = api_client.login_user(login_email, login_password)
                     st.session_state[USER_SESSION_KEY] = resp["user"]
                     st.success("Logged in successfully.")
-                    st.experimental_rerun()
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Login failed: {e}")
 
