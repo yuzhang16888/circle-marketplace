@@ -121,31 +121,35 @@ from backend.db import (
     verify_password,
 )
 
-@app.post("/auth/login")
-def login(payload: LoginRequest):
+@app.post("/auth/register")
+def register(payload: RegisterRequest):
     email = payload.email.strip().lower()
     password = payload.password.strip()
+    full_name = payload.full_name.strip() if payload.full_name else None
 
     if not email or not password:
         raise HTTPException(status_code=400, detail="Email and password are required.")
 
-    user = get_user_by_email(email)
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid email or password.")
+    # 1) already registered?
+    existing = get_user_by_email(email)
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered.")
 
-    stored_hash = user["password_hash"]
-    if not verify_password(password, stored_hash):
-        raise HTTPException(status_code=401, detail="Invalid email or password.")
+    # 2) invite-only: require an unused invite for this email
+    invite = get_invite_for_email(email)
+    if not invite:
+        raise HTTPException(
+            status_code=403,
+            detail="This email is not invited to Circle yet. Please ask a member to invite you.",
+        )
 
-    # For now just return basic user info; later we can add JWT / session token
-    return {
-        "status": "ok",
-        "user": {
-            "id": user["id"],
-            "email": user["email"],
-            "full_name": user["full_name"],
-        },
-    }
+    # 3) create user
+    user_id = create_user(email=email, password=password, full_name=full_name)
+
+    # 4) mark invite as used
+    mark_invite_used(invite["id"], user_id)
+
+    return {"status": "ok", "user_id": user_id}
 
 
 class RegisterRequest(BaseModel):
