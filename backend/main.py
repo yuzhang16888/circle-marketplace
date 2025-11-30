@@ -45,7 +45,8 @@ from backend.db import create_user, get_user_by_email
 class RegisterRequest(BaseModel):
     email: str
     password: str
-    full_name: str | None = None
+    full_name: Optional[str] = None   # ✅ 3.9-safe
+
 
 @app.post("/auth/register")
 def register(payload: RegisterRequest):
