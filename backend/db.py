@@ -141,6 +141,8 @@ def verify_password(password: str, stored_hash: str) -> bool:
     """
     return hash_password(password) == stored_hash
 
+def verify_password(password: str, stored_hash: str) -> bool:
+    return hash_password(password) == stored_hash
 
 def create_user(email: str, password: str, full_name: Optional[str] = None) -> int:
     """

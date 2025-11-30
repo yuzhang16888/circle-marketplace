@@ -87,6 +87,31 @@ def invites_create(payload: InviteCreateRequest):
 
     return {"status": "ok", "invite_id": invite_id}
 
+@app.post("/auth/login")
+def login(payload: LoginRequest):
+    email = payload.email.strip().lower()
+    password = payload.password.strip()
+
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email and password are required.")
+
+    user = get_user_by_email(email)
+    if not user:
+        # don't reveal which part is wrong
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+    stored_hash = user["password_hash"]
+    if not verify_password(password, stored_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+
+    return {
+        "status": "ok",
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "full_name": user["full_name"],
+        },
+    }
 
 
 @app.get("/invites")
