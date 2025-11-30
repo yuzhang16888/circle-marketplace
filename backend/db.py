@@ -20,12 +20,19 @@ def get_connection():
 from typing import Optional
 
 def get_invites_by_inviter(invited_by_id: int):
-    ensure_invites_table()
+    """
+    Return all invites created by a given inviter.
+    """
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
         """
-        SELECT id, email, invited_by_id, used_by_user_id, created_at, used_at
+        SELECT id,
+               email,
+               invited_by_id,
+               used_by_user_id,
+               created_at,
+               used_at
         FROM invites
         WHERE invited_by_id = %s
         ORDER BY created_at DESC
@@ -35,7 +42,6 @@ def get_invites_by_inviter(invited_by_id: int):
     rows = cur.fetchall()
     conn.close()
     return rows
-
 
 def ensure_users_table():
     """
