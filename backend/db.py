@@ -1,6 +1,8 @@
 # backend/db.py
 import sqlite3
 from pathlib import Path
+from typing import Optional
+import hashlib
 
 # Path to your existing SQLite database (circle.db in project root)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -17,15 +19,12 @@ def get_connection():
     return conn
 
 
-def get_users_count() -> int:
+def ensure_users_table():
     """
-    Simple test query: how many users in the users table?
-    If the users table doesn't exist yet, create it and return 0.
+    Make sure the users table exists.
     """
     conn = get_connection()
     cur = conn.cursor()
-
-    # Ensure users table exists (minimal schema for now)
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS users (
@@ -40,20 +39,36 @@ def get_users_count() -> int:
         );
         """
     )
+    conn.commit()
+    conn.close()
 
-    # Now count rows
+
+def get_users_count() -> int:
+    """
+    Simple test query: how many users in the users table?
+    """
+    ensure_users_table()
+    conn = get_connection()
+    cur = conn.cursor()
     cur.execute("SELECT COUNT(*) AS count FROM users;")
     row = cur.fetchone()
     cur.close()
     conn.close()
     return row["count"]
 
-import hashlib
 
 def hash_password(password: str) -> str:
+    """
+    Very simple password hash for now (SHA-256).
+    """
     return hashlib.sha256(password.encode()).hexdigest()
 
-def create_user(email: str, password: str, full_name: str | None):
+
+def create_user(email: str, password: str, full_name: Optional[str] = None) -> int:
+    """
+    Insert a new user and return its id.
+    """
+    ensure_users_table()
     conn = get_connection()
     cur = conn.cursor()
 
@@ -71,7 +86,12 @@ def create_user(email: str, password: str, full_name: str | None):
     conn.close()
     return uid
 
+
 def get_user_by_email(email: str):
+    """
+    Return a single user row by email, or None if not found.
+    """
+    ensure_users_table()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT * FROM users WHERE email = ?", (email,))
