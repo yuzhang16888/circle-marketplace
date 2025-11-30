@@ -19,7 +19,7 @@ def get_connection():
     return conn
 from typing import Optional
 
-ddef get_invites_by_inviter(invited_by_id: int):
+def get_invites_by_inviter(invited_by_id: int):
     """
     Return all invites created by a given inviter.
     Only uses basic columns to avoid schema mismatch issues.
