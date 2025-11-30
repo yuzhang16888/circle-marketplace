@@ -76,13 +76,46 @@ def invites_create(payload: InviteCreateRequest):
     invite_id = create_invite(email=email, invited_by_id=payload.invited_by_id)
 
     # Send "invite" email (console only for now)
-    subject = "You’re invited to Circle"
-    body = (
-        "Hi!\n\n"
-        "You've been invited to Circle, a curated resale marketplace.\n"
-        "You can sign up with this email address to join as an early member.\n\n"
-        "Love,\nCircle"
-    )
+    # inside create_invite() AFTER invite creation:
+
+subject = "Your Invitation to Circle — A Curated Community of Trusted Sellers"
+
+body = f"""
+Hello,
+
+A Circle member has extended a private invitation on your behalf.
+Membership is granted only when an existing member is willing to stand behind your character and your integrity.
+
+Circle is a curated environment for selling and discovering:
+vintage pieces, designer goods, artwork, craftwork, and unique personal items — always authentic, never counterfeit.
+
+Our community is built on three principles:
+
+Trust. Taste. Transparency.
+
+Every invitation represents a personal recommendation.
+Every member is responsible for the integrity of the people they invite.
+
+If you choose to join, you are affirming that you will uphold the same standards:
+authenticity, honesty, and respect in every transaction.
+
+Our guidelines:
+
+• List only authentic and original items
+• Conduct all transactions with honesty and professionalism
+• Invite only individuals you personally trust and would vouch for
+• Sellers contribute a 10% commission that supports Circle’s operations and curation
+
+Your invitation is now active.  
+Use this email address to join the Circle.
+
+Warmly,  
+Jo BoBa  
+Founder, Circle
+"""
+
+
+
     send_email(email, subject, body)
 
     return {"status": "ok", "invite_id": invite_id}
