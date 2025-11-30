@@ -14,6 +14,8 @@ from backend.db import (
     mark_invite_used,
 )
 
+from backend.notifications import send_email
+
 
 
 app = FastAPI(title="Circle Backend")
@@ -73,8 +75,18 @@ def invites_create(payload: InviteCreateRequest):
 
     invite_id = create_invite(email=email, invited_by_id=payload.invited_by_id)
 
-    # (we'll add email sending in step C)
+    # Send "invite" email (console only for now)
+    subject = "You’re invited to Circle"
+    body = (
+        "Hi!\n\n"
+        "You've been invited to Circle, a curated resale marketplace.\n"
+        "You can sign up with this email address to join as an early member.\n\n"
+        "Love,\nCircle"
+    )
+    send_email(email, subject, body)
+
     return {"status": "ok", "invite_id": invite_id}
+
 
 
 @app.get("/invites")
@@ -113,6 +125,19 @@ def register(payload: RegisterRequest):
     # 2) Create the user
     user_id = create_user(email=email, password=password, full_name=payload.full_name)
     return {"status": "ok", "user_id": user_id}
+
+    # 5) send welcome email (console)
+    subject = "Welcome to Circle"
+    body = (
+        f"Hi {full_name or email},\n\n"
+        "Welcome to Circle! Your account has been created.\n"
+        "You can now log in, create listings, and shop from curated closets.\n\n"
+        "Love,\nCircle"
+    )
+    send_email(email, subject, body)
+
+    return {"status": "ok", "user_id": user_id}
+
 
 from backend.db import (
     get_users_count,
