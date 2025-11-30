@@ -18,8 +18,6 @@ from backend.db import (
 
 from backend.notifications import send_email
 
-
-
 app = FastAPI(title="Circle Backend")
 
 app.add_middleware(
@@ -32,10 +30,20 @@ app.add_middleware(
 @app.get("/invites/by_inviter/{invited_by_id}")
 def invites_by_inviter(invited_by_id: int):
     rows = get_invites_by_inviter(invited_by_id)
-    return {
-        "status": "ok",
-        "invites": [dict(r) for r in rows],
-    }
+
+    invites = []
+    for r in rows:
+        # r is a tuple from psycopg2 cursor
+        invites.append(
+            {
+                "id": r[0],
+                "email": r[1],
+                "invited_by_id": r[2],
+                "used_by_user_id": r[3],
+            }
+        )
+
+    return {"status": "ok", "invites": invites}
 
 @app.get("/ping")
 def ping():

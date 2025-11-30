@@ -19,9 +19,10 @@ def get_connection():
     return conn
 from typing import Optional
 
-def get_invites_by_inviter(invited_by_id: int):
+ddef get_invites_by_inviter(invited_by_id: int):
     """
     Return all invites created by a given inviter.
+    Only uses basic columns to avoid schema mismatch issues.
     """
     conn = get_connection()
     cur = conn.cursor()
@@ -30,12 +31,10 @@ def get_invites_by_inviter(invited_by_id: int):
         SELECT id,
                email,
                invited_by_id,
-               used_by_user_id,
-               created_at,
-               used_at
+               used_by_user_id
         FROM invites
         WHERE invited_by_id = %s
-        ORDER BY created_at DESC
+        ORDER BY id DESC
         """,
         (invited_by_id,),
     )
