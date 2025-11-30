@@ -4,7 +4,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 
-from backend.db import get_users_count, create_user, get_user_by_email
+from backend.db import (
+    get_users_count,
+    create_user,
+    get_user_by_email,
+    verify_password,
+    create_invite,
+    get_invite_for_email,
+    mark_invite_used,
+)
+
 
 
 app = FastAPI(title="Circle Backend")
@@ -50,6 +59,45 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+class InviteCreateRequest(BaseModel):
+    email: str
+    invited_by_id: Optional[int] = None
+
+
+@app.post("/invites/create")
+def invites_create(payload: InviteCreateRequest):
+    email = payload.email.strip().lower()
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required.")
+
+    invite_id = create_invite(email=email, invited_by_id=payload.invited_by_id)
+
+    # (we'll add email sending in step C)
+    return {"status": "ok", "invite_id": invite_id}
+
+
+@app.get("/invites")
+def invites_list():
+    from backend.db import get_connection
+
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id, email, invited_by_id, used_by_user_id, created_at, used_at
+        FROM invites
+        ORDER BY id DESC
+        """
+    )
+    rows = cur.fetchall()
+    conn.close()
+
+    return {
+        "status": "ok",
+        "invites": [dict(r) for r in rows],
+    }
+
 
 
 @app.post("/auth/register")
