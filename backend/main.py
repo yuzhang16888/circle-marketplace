@@ -33,6 +33,8 @@ from backend.db import get_connection  # you already import this below in /invit
 
 @app.get("/invites/by_inviter/{invited_by_id}")
 def invites_by_inviter(invited_by_id: int):
+    from backend.db import get_connection
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -44,7 +46,7 @@ def invites_by_inviter(invited_by_id: int):
                created_at,
                used_at
         FROM invites
-        WHERE invited_by_id = %s
+        WHERE invited_by_id = ?
         ORDER BY id DESC
         """,
         (invited_by_id,),
