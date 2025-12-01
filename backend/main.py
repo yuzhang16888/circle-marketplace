@@ -29,6 +29,8 @@ app.add_middleware(
 )
 
 
+from backend.db import get_connection  # you already import this below in /invites
+
 @app.get("/invites/by_inviter/{invited_by_id}")
 def invites_by_inviter(invited_by_id: int):
     conn = get_connection()
