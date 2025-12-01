@@ -109,51 +109,48 @@ def invites_create(payload: InviteCreateRequest):
     if not email:
         raise HTTPException(status_code=400, detail="Email is required.")
 
-    invite_id = create_invite(email=email, invited_by_id=payload.invited_by_id)
+    invite_id = create_invite(email=email, invited_by_id=invited_by_id)
 
     greeting_name = name if name else "there"
 
-    # Send "invite" email (console only for now)
-    # inside create_invite() AFTER invite creation:
-
     subject = "Your Invitation to Circle — A Curated Community of Trusted Sellers"
 
-    body = f"""
-        Hello,
+    body = f"""Hello {greeting_name},
 
-        A Circle member has extended a private invitation on your behalf.
-        Membership is granted only when an existing member is willing to stand behind your character and your integrity.
+A Circle member has extended a private invitation on your behalf.
+Membership is granted only when an existing member is willing to stand behind your character and your integrity.
 
-        Circle is a curated environment for selling and discovering:
-        vintage pieces, designer goods, artwork, craftwork, and unique personal items — always authentic, never counterfeit.
+Circle is a curated environment for selling and discovering:
+vintage pieces, designer goods, artwork, craftwork, and unique personal items — always authentic, never counterfeit.
 
-        Our community is built on three principles:
+Our community is built on three principles:
 
-        Trust. Taste. Transparency.
+Trust. Taste. Transparency.
 
-        Every invitation represents a personal recommendation.
-        Every member is responsible for the integrity of the people they invite.
+Every invitation represents a personal recommendation.
+Every member is responsible for the integrity of the people they invite.
 
-        If you choose to join, you are affirming that you will uphold the same standards:
-        authenticity, honesty, and respect in every transaction.
+If you choose to join, you are affirming that you will uphold the same standards:
+authenticity, honesty, and respect in every transaction.
 
-        Our guidelines:
+Our guidelines:
 
-        • List only authentic and original items
-        • Conduct all transactions with honesty and professionalism
-        • Invite only individuals you personally trust and would vouch for
-        • Sellers contribute a 10% commission that supports Circle’s operations and curation
+• List only authentic and original items
+• Conduct all transactions with honesty and professionalism
+• Invite only individuals you personally trust and would vouch for
+• Sellers contribute a 10% commission that supports Circle’s operations and curation
 
-        Your invitation is now active.  
-        Use this email address to join the Circle.
+Your invitation is now active.
+Use this email address to join the Circle.
 
-        Warmly,  
-        Jo BoBa  
-        Founder, Circle
-        """
+Warmly,
+Jo BoBa
+Founder, Circle
+"""
     send_email(email, subject, body)
 
     return {"status": "ok", "invite_id": invite_id}
+
 
 @app.post("/auth/login")
 def login(payload: LoginRequest):
