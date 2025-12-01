@@ -28,7 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 @app.get("/invites/by_inviter/{invited_by_id}")
-dfrom backend.db import get_connection  # you already import this below in /invites
+from backend.db import get_connection  # you already import this below in /invites
 
 @app.get("/invites/by_inviter/{invited_by_id}")
 def invites_by_inviter(invited_by_id: int):
