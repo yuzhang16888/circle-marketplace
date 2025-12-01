@@ -2,63 +2,48 @@
 import os
 import smtplib
 import ssl
-from email.message import EmailMessage
+
+
+# --- SMTP configuration ---
+# For now we use Gmail + app password.
+# Make sure these are set in your environment before running uvicorn.
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 587
+
+SMTP_USER = os.environ.get("CIRCLE_SMTP_USER")      # your full Gmail address
+SMTP_PASSWORD = os.environ.get("CIRCLE_SMTP_PASS")  # your Gmail app password
+
+FROM_EMAIL = SMTP_USER
+FROM_NAME = "Circle"
 
 
 def send_email(to_email: str, subject: str, body: str):
     """
-    Send an email using SMTP.
-    For production, configure via environment variables:
-
-      SMTP_HOST      (e.g. smtp.gmail.com)
-      SMTP_PORT      (e.g. 465)
-      SMTP_USER      (your login, e.g. your Gmail address)
-      SMTP_PASSWORD  (your SMTP password or Gmail app password)
-      EMAIL_FROM     (optional, display From; defaults to SMTP_USER)
-
-    If config is missing, this will just print the email contents.
+    Send a plain-text email via Gmail SMTP with TLS.
     """
-
-    smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    smtp_port_str = os.getenv("SMTP_PORT", "465")
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
-    from_email = os.getenv("EMAIL_FROM", smtp_user if smtp_user else "no-reply@example.com")
-
-    try:
-        smtp_port = int(smtp_port_str)
-    except ValueError:
-        smtp_port = 465
-
-    # Debug print – always
-    print("=== EMAIL OUT (attempting real send) ===")
-    print(f"To: {to_email}")
-    print(f"From: {from_email}")
-    print(f"Subject: {subject}")
-    print("Body:")
-    print(body)
-    print("=== END EMAIL ===")
-
-    # If we don't have credentials, don't crash – just return after printing
-    if not smtp_user or not smtp_password:
-        print("EMAIL SEND SKIPPED: SMTP_USER or SMTP_PASSWORD not set.")
+    if not SMTP_USER or not SMTP_PASSWORD:
+        # Fail loudly so you see it in the terminal
+        print("❌ SMTP is not configured (CIRCLE_SMTP_USER / CIRCLE_SMTP_PASS missing).")
         return
 
-    try:
-        msg = EmailMessage()
-        msg["Subject"] = subject
-        msg["From"] = from_email
-        msg["To"] = to_email
-        msg.set_content(body)
+    msg = f"From: {FROM_NAME} <{FROM_EMAIL}>\r\n" \
+          f"To: {to_email}\r\n" \
+          f"Subject: {subject}\r\n" \
+          f"Content-Type: text/plain; charset=utf-8\r\n" \
+          "\r\n" \
+          f"{body}"
 
-        context = ssl.create_default_context()
+    print("=== EMAIL OUT (attempting real send) ===")
+    print(f"From: {FROM_NAME} <{FROM_EMAIL}>")
+    print(f"To: {to_email}")
+    print(f"Subject: {subject}")
+    # don't print full body every time in case it's long
+    print("=== END EMAIL HEADER ===")
 
-        # Using SSL (port 465); for STARTTLS you'd use SMTP + starttls
-        with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
-            server.login(smtp_user, smtp_password)
-            server.send_message(msg)
+    context = ssl.create_default_context()
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        server.starttls(context=context)
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.sendmail(FROM_EMAIL, [to_email], msg)
 
-        print(f"EMAIL SENT SUCCESSFULLY to {to_email}")
-
-    except Exception as e:
-        print(f"EMAIL SEND ERROR: {e}")
+    print("✅ Email sent successfully.")
