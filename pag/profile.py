@@ -34,7 +34,7 @@ def render(user: Optional[dict] = None):
     if st.button("Log out"):
         logout()
         st.success("You have been logged out.")
-        st.experimental_rerun()
+        st.rerun()
      
     #st.markdown("---")
     #st.caption("More profile and friend features coming soon ✨")
