@@ -28,22 +28,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 @app.get("/invites/by_inviter/{invited_by_id}")
+dfrom backend.db import get_connection  # you already import this below in /invites
+
+@app.get("/invites/by_inviter/{invited_by_id}")
 def invites_by_inviter(invited_by_id: int):
-    rows = get_invites_by_inviter(invited_by_id)
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT id,
+               email,
+               invited_by_id,
+               used_by_user_id,
+               created_at,
+               used_at
+        FROM invites
+        WHERE invited_by_id = %s
+        ORDER BY id DESC
+        """,
+        (invited_by_id,),
+    )
+    rows = cur.fetchall()
+    conn.close()
 
-    invites = []
-    for r in rows:
-        # r is a tuple from psycopg2 cursor
-        invites.append(
-            {
-                "id": r[0],
-                "email": r[1],
-                "invited_by_id": r[2],
-                "used_by_user_id": r[3],
-            }
-        )
+    return {
+        "status": "ok",
+        "invites": [dict(r) for r in rows],
+    }
 
-    return {"status": "ok", "invites": invites}
 
 @app.get("/ping")
 def ping():
