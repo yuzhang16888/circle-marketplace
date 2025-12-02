@@ -99,7 +99,7 @@ def main():
     elif st.session_state["main_nav"] == "Profile & Friends":
         profile.render(user)
     elif st.session_state["main_nav"]== "test_stripe_connect":
-        test_strip_connect.render(user)
+        test_stripe_connect.render(user)
 
 
 if __name__ == "__main__":
