@@ -1,16 +1,20 @@
+# pag/test_strip_connect.py
+
 from typing import Optional
 
 import streamlit as st
 import stripe
 
 from core.auth import get_current_user
-from core.db import get_db
-from core.models import User
+from core.db import get_user_by_id, update_user_stripe_account
 
 stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
 
 
 def render(user: Optional[dict] = None):
+    """
+    Test page for Stripe Connect onboarding using sqlite3-based DB helpers.
+    """
     if user is None:
         user = get_current_user()
 
@@ -20,7 +24,12 @@ def render(user: Optional[dict] = None):
 
     st.header("🔗 Stripe Connect – Test Page")
 
-    default_email = user.get("email") if isinstance(user, dict) else None
+    # user might be a dict or a Row; handle both
+    user_id = user.get("id") if isinstance(user, dict) else user["id"]
+    user_row = get_user_by_id(user_id)
+    email_from_db = user_row["email"] if user_row else None
+
+    default_email = email_from_db or (user.get("email") if isinstance(user, dict) else None)
     email = st.text_input(
         "Seller email for Stripe test account",
         value=default_email or "test-seller@example.com",
@@ -28,6 +37,7 @@ def render(user: Optional[dict] = None):
 
     if st.button("Create test Stripe Connect account"):
         try:
+            # 1) Create Stripe Connect Standard account
             account = stripe.Account.create(
                 type="standard",
                 email=email,
@@ -35,29 +45,21 @@ def render(user: Optional[dict] = None):
                     "card_payments": {"requested": True},
                     "transfers": {"requested": True},
                 },
-                metadata={"circle_user_id": str(user.get("id"))},
+                metadata={"circle_user_id": str(user_id)},
             )
 
-            # 🔹 save Stripe account ID to this user in DB
-            db = get_db()
-            db_user = db.query(User).filter(User.id == user["id"]).first()
-            if db_user is None:
-                st.error("Could not find your user in database.")
-                return
-
-            db_user.stripe_account_id = account.id
-            # for now we just set onboarded=False; later we can verify with Stripe
-            db_user.stripe_onboarded = False
-            db.commit()
+            # 2) Save Stripe account ID in our sqlite users table
+            update_user_stripe_account(user_id=user_id, stripe_account_id=account.id, onboarded=False)
 
             st.success(
                 f"✅ Created Stripe account `{account.id}` and saved it to your profile."
             )
 
+            # 3) Generate onboarding link
             account_link = stripe.AccountLink.create(
                 account=account.id,
-                refresh_url="http://localhost:8501/test_stripe_connect",
-                return_url="http://localhost:8501/test_stripe_connect",
+                refresh_url="http://localhost:8501/test_strip_connect",
+                return_url="http://localhost:8501/test_strip_connect",
                 type="account_onboarding",
             )
 
