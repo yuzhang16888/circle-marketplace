@@ -1,22 +1,16 @@
-# pages/test_stripe_connect.py
-
 from typing import Optional
 
 import streamlit as st
 import stripe
 
-from core.auth import get_current_user  # same pattern as profile.py
+from core.auth import get_current_user
+from core.db import get_db
+from core.models import User
 
-# Use your secret key from st.secrets
 stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
 
 
 def render(user: Optional[dict] = None):
-    """
-    Test page for Stripe Connect onboarding.
-    Only for internal testing – not user-facing yet.
-    """
-    # Make sure we have a logged-in user, same logic as profile.py
     if user is None:
         user = get_current_user()
 
@@ -25,12 +19,7 @@ def render(user: Optional[dict] = None):
         st.stop()
 
     st.header("🔗 Stripe Connect – Test Page")
-    st.write(
-        "This page is only for testing that we can talk to Stripe Connect and "
-        "create an onboarding link for a seller."
-    )
 
-    # Default email: current user's email, but you can override it
     default_email = user.get("email") if isinstance(user, dict) else None
     email = st.text_input(
         "Seller email for Stripe test account",
@@ -39,7 +28,6 @@ def render(user: Optional[dict] = None):
 
     if st.button("Create test Stripe Connect account"):
         try:
-            # 1) Create a Stripe Connect Standard account
             account = stripe.Account.create(
                 type="standard",
                 email=email,
@@ -47,12 +35,25 @@ def render(user: Optional[dict] = None):
                     "card_payments": {"requested": True},
                     "transfers": {"requested": True},
                 },
-                metadata={"circle_user_id": str(user.get("id")) if isinstance(user, dict) else ""},
+                metadata={"circle_user_id": str(user.get("id"))},
             )
 
-            st.success(f"✅ Created Stripe account: `{account.id}`")
+            # 🔹 save Stripe account ID to this user in DB
+            db = get_db()
+            db_user = db.query(User).filter(User.id == user["id"]).first()
+            if db_user is None:
+                st.error("Could not find your user in database.")
+                return
 
-            # 2) Create an onboarding link so the seller can finish setup
+            db_user.stripe_account_id = account.id
+            # for now we just set onboarded=False; later we can verify with Stripe
+            db_user.stripe_onboarded = False
+            db.commit()
+
+            st.success(
+                f"✅ Created Stripe account `{account.id}` and saved it to your profile."
+            )
+
             account_link = stripe.AccountLink.create(
                 account=account.id,
                 refresh_url="http://localhost:8501/test_stripe_connect",
