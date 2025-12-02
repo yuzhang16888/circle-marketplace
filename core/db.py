@@ -5,6 +5,36 @@ import secrets
 import json
 from .config import DB_PATH
 
+# core/db.py
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+
+# SQLite URL – keep it in project root as circle.db
+DATABASE_URL = "sqlite:///./circle.db"
+
+# Needed for SQLite + multiple threads (Streamlit)
+engine = create_engine(
+    DATABASE_URL, connect_args={"check_same_thread": False}
+)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+
+def get_db():
+    """
+    Simple helper for Streamlit to get a DB session.
+
+    Usage:
+        db = get_db()
+        db.query(User)...
+    Remember: this does NOT auto-close the session; for now that's OK for dev.
+    """
+    return SessionLocal()
+
+
 
 def get_connection():
     """Return a SQLite connection with Row dict-like access."""
