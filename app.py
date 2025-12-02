@@ -5,6 +5,25 @@ from core.db import init_db
 from core.auth import ensure_user_logged_in
 from pag import home, create_listing, my_listings, admin_dashboard, profile, cart, checkout
 
+
+import stripe
+
+
+
+st.write("Stripe Secret Loaded?", "STRIPE_SECRET_KEY" in st.secrets)
+st.write("Stripe Publishable Loaded?", "STRIPE_PUBLISHABLE_KEY" in st.secrets)
+
+
+stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
+
+PUBLISHABLE_KEY = st.secrets["STRIPE_PUBLISHABLE_KEY"]
+SUCCESS_URL = st.secrets["STRIPE_SUCCESS_URL"]
+CANCEL_URL = st.secrets["STRIPE_CANCEL_URL"]
+FEE_PERCENT = st.secrets["STRIPE_PLATFORM_FEE_PERCENT"]
+
+
+
+
 BASE_NAV_PAGES = [
     "Home",
     "Create Listing",
