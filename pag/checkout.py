@@ -1,13 +1,17 @@
 # pag/checkout.py
 import json
 import streamlit as st
+import stripe
+
 from core.db import (
     get_listings_by_ids,
+    get_user_by_id,
     create_order,
     update_listing_status,
+    update_order_stripe_info,
 )
-# update_listing_status already exists in your db file
 
+# ---------- CONSTANTS ----------
 
 US_STATES = [
     "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
@@ -37,6 +41,7 @@ def _get_image_list(row):
         paths = [row["image_path"]]
 
     return paths
+
 
 def render(user):
     st.header("Checkout")
@@ -114,14 +119,15 @@ def render(user):
 
         phone_raw = st.text_input(
             "Mobile phone",
-            value="",
+            value="", 
             placeholder="e.g. (415) 555-1234",
         )
 
-        st.subheader("Payment preference (off-platform for now)")
+        st.subheader("Payment preference (for notes only)")
         payment_method = st.selectbox(
-            "Preferred payment method",
-            ["Venmo", "PayPal", "Zelle", "Cash App", "Bank transfer", "Other"],
+            "Preferred payment method (for seller reference)",
+            ["Stripe (recommended)", "Venmo", "PayPal", "Zelle", "Cash App", "Bank transfer", "Other"],
+            index=0,
         )
 
         buyer_note = st.text_area(
@@ -129,7 +135,7 @@ def render(user):
             placeholder="e.g. Please ship with signature required.",
         )
 
-        submitted = st.form_submit_button("Place order")
+        submitted = st.form_submit_button("Place order and go to payment")
 
     # If user hasn't submitted yet, stop here
     if not submitted:
@@ -166,12 +172,28 @@ def render(user):
 
     if errors:
         for e in errors:
-            st.error(e)
+            st.error("Please fix the following issues:")
+        for e in errors:
+            st.error(f"• {e}")
         return
 
-    # ---------- CREATE ORDER ----------
+    # ---------- LOAD SELLER + STRIPE ACCOUNT ----------
+    seller = get_user_by_id(seller_id)
+    if not seller:
+        st.error("Seller not found.")
+        return
+
+    seller_stripe_account_id = seller["stripe_account_id"]
+    if not seller_stripe_account_id:
+        st.error(
+            "This seller has not finished setting up Stripe payouts yet. "
+            "Please ask them to complete onboarding first."
+        )
+        return
+
+    # ---------- CREATE ORDER (local DB) ----------
     buyer_id = user["id"]
-    total_price = price  # no fees yet in MVP
+    total_price = price  # TODO: later add shipping / fees if needed
 
     order_id = create_order(
         buyer_id=buyer_id,
@@ -186,12 +208,12 @@ def render(user):
         shipping_postal_code=postal_code_clean,
         shipping_country=country,
         shipping_phone=formatted_phone,
-        payment_method=payment_method,
+        payment_method="Stripe",  # main actual payment channel
         buyer_note=buyer_note.strip(),
     )
 
     # Mark listing as reserved so it disappears from public feed
-    update_listing_status(seller_id,listing_id, "reserved")
+    update_listing_status(seller_id, listing_id, "reserved")
 
     # Remove from cart
     if "cart_listing_ids" in st.session_state:
@@ -199,14 +221,71 @@ def render(user):
             x for x in st.session_state["cart_listing_ids"] if x != listing_id
         ]
 
-    # Clear checkout selection
-    st.session_state["checkout_listing_id"] = None
+    # ---------- CREATE STRIPE CHECKOUT SESSION ----------
+    try:
+        stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
+    except Exception:
+        st.error("Stripe secret key is not configured in Streamlit secrets.")
+        return
 
-    # ------------------ SUCCESS MESSAGES ------------------
-    st.success("🎉 Order placed successfully!")
-    st.info("We will email you when the seller ships your item.")
+    # Commission: default 10% unless overridden in secrets
+    platform_fee_percent = float(st.secrets.get("STRIPE_PLATFORM_FEE_PERCENT", 10))
 
-    # Optional: button to go back home
-    if st.button("Return to Home"):
-        st.session_state["main_nav"] = "Home"
-        st.rerun()
+    amount_cents = int(round(total_price * 100))
+    fee_cents = int(round(amount_cents * platform_fee_percent / 100.0))
+
+    # Try to get buyer email from user dict (fallback to None)
+    buyer_email = user.get("email") if isinstance(user, dict) else None
+
+    try:
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            payment_method_types=["card"],
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {
+                            "name": listing["title"],
+                        },
+                        "unit_amount": amount_cents,
+                    },
+                    "quantity": 1,
+                }
+            ],
+            customer_email=buyer_email,
+            metadata={
+                "order_id": str(order_id),
+                "listing_id": str(listing["id"]),
+                "seller_id": str(seller_id),
+                "buyer_id": str(buyer_id),
+            },
+            payment_intent_data={
+                "application_fee_amount": fee_cents,  # your commission
+                "transfer_data": {
+                    "destination": seller_stripe_account_id,
+                },
+            },
+            # For now: simple success/cancel URLs.
+            # Later you can add a dedicated success page that reads session_id.
+            success_url="http://localhost:8501",
+            cancel_url="http://localhost:8501",
+        )
+
+        # Save Stripe session ID on the order
+        update_order_stripe_info(
+            order_id=order_id,
+            stripe_session_id=session.id,
+            stripe_payment_intent_id=None,
+        )
+
+        # Clear checkout selection
+        st.session_state["checkout_listing_id"] = None
+
+        st.success("✅ Order created. Click below to complete payment on Stripe.")
+        st.link_button("Pay securely with Stripe", session.url)
+
+    except Exception as e:
+        st.error(f"Error creating Stripe Checkout session: {e}")
+        # Optional: revert listing status if you want
+        # update_listing_status(seller_id, listing_id, "published")
