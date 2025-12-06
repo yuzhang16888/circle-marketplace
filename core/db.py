@@ -858,6 +858,29 @@ def update_order_status(order_id: int, status: str):
     conn.commit()
     conn.close()
 
+def update_order_stripe_info(
+    order_id: int,
+    stripe_session_id: str,
+    stripe_payment_intent_id=None,
+):
+    """
+    Attach Stripe checkout/payment info to an order.
+    We fill payment_intent_id later on success.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE orders
+        SET stripe_session_id = ?,
+            stripe_payment_intent_id = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (stripe_session_id, stripe_payment_intent_id, order_id),
+    )
+    conn.commit()
+    conn.close()
 
 def update_order_shipping(
     order_id: int,
