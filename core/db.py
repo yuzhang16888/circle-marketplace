@@ -481,6 +481,36 @@ def get_listings_for_user(user_id):
     rows = cur.fetchall()
     conn.close()
     return rows
+def get_listing_by_id(listing_id: int):
+    """Fetch a single listing with seller info."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT
+            l.id,
+            l.user_id,
+            l.title,
+            l.description,
+            l.price,
+            l.image_path,
+            l.created_at,
+            l.brand,
+            l.category,
+            l.condition,
+            l.retail_price,
+            l.image_paths,
+            l.status,
+            u.display_name AS seller_name
+        FROM listings l
+        JOIN users u ON u.id = l.user_id
+        WHERE l.id = ?
+        """,
+        (listing_id,),
+    )
+    row = cur.fetchone()
+    conn.close()
+    return row
 
 
 def get_listings_by_ids(listing_ids):
