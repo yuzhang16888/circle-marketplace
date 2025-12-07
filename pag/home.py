@@ -125,6 +125,11 @@ def _listing_card(row, user, prefix: str):
                     else:
                         st.session_state["cart_listing_ids"] = cart_ids + [listing_id]
                     st.rerun()
+                # ⭐ New feature: quick checkout button
+                if in_cart:
+                    if st.button("Proceed to Checkout →", key=f"{prefix}_checkout_{listing_id}"):
+                        st.session_state["main_nav"] = "Cart"
+                        st.rerun()
 
 
 # -----------------------
