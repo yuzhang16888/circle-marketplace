@@ -178,26 +178,15 @@ def render(user):
         return
 
     # ---------- LOAD SELLER + STRIPE ACCOUNT ----------
+        # ---------- LOAD SELLER (no Stripe account required in Model 2) ----------
     seller = get_user_by_id(seller_id)
     if not seller:
         st.error("Seller not found.")
         return
-    # --- DEBUG: see what checkout sees for this seller ---
-    try:
-        st.write("DEBUG seller_id:", seller_id)
-        st.write("DEBUG seller row:", dict(seller))
-    except Exception:
-        st.write("DEBUG seller_id:", seller_id)
-        st.write("DEBUG stripe_account_id:", seller["stripe_account_id"])
-        st.write("DEBUG stripe_onboarded:", seller["stripe_onboarded"])
 
-    seller_stripe_account_id = seller["stripe_account_id"]
-    if not seller_stripe_account_id:
-        st.error(
-            "This seller has not finished setting up Stripe payouts yet. "
-            "Please ask them to complete onboarding first."
-        )
-        return
+    # In Model 2, Circle collects payment and will pay the seller manually (Zelle/PayPal/etc.).
+    # We do NOT require the seller to have a Stripe account here.
+
 
     # ---------- CREATE ORDER (local DB) ----------
     buyer_id = user["id"]
@@ -229,14 +218,15 @@ def render(user):
             x for x in st.session_state["cart_listing_ids"] if x != listing_id
         ]
 
-    # ---------- CREATE STRIPE CHECKOUT SESSION ----------
+        # ---------- CREATE STRIPE CHECKOUT SESSION (Model 2: Circle collects full amount) ----------
     try:
         stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
     except Exception:
         st.error("Stripe secret key is not configured in Streamlit secrets.")
         return
 
-    # Commission: default 10% unless overridden in secrets
+    # Commission: default 10% unless overridden in secrets.
+    # This is for your own accounting; Stripe will send the FULL amount to Circle.
     platform_fee_percent = float(st.secrets.get("STRIPE_PLATFORM_FEE_PERCENT", 10))
 
     amount_cents = int(round(total_price * 100))
@@ -267,15 +257,9 @@ def render(user):
                 "listing_id": str(listing["id"]),
                 "seller_id": str(seller_id),
                 "buyer_id": str(buyer_id),
+                "commission_cents": str(fee_cents),
             },
-            payment_intent_data={
-                "application_fee_amount": fee_cents,  # your commission
-                "transfer_data": {
-                    "destination": seller_stripe_account_id,
-                },
-            },
-            # For now: simple success/cancel URLs.
-            # Later you can add a dedicated success page that reads session_id.
+            # Note: no payment_intent_data, no transfer_data. All funds go to Circle's Stripe account.
             success_url="http://localhost:8501",
             cancel_url="http://localhost:8501",
         )
@@ -297,4 +281,5 @@ def render(user):
         st.error(f"Error creating Stripe Checkout session: {e}")
         # Optional: revert listing status if you want
         # update_listing_status(seller_id, listing_id, "published")
-   
+
+    
