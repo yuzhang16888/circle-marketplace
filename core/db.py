@@ -1,15 +1,15 @@
 # core/db.py
 
 import sqlite3
-import secrets
+# import secrets
 import json
 import os
 
 from .config import DB_PATH
 
 # --- Optional SQLAlchemy setup (not required for current sqlite helpers, but kept for future use) ---
-# from sqlalchemy import create_engine
-# from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 # SQLite URL – keep it in project root as circle.db
 DATABASE_URL = "sqlite:///./circle.db"
