@@ -69,7 +69,7 @@ def render(user):
 
     description = st.text_area(
         "Description *",
-        help="Include sizing info, flaws, how often used, and anything that builds trust.",
+        help="Include sizing info, flaws, how often used, and anything that builds trust.(Maximum 300 words.)",
     )
 
     st.markdown("**Photos (up to 7)**")
@@ -103,6 +103,13 @@ def render(user):
         errors.append("Title is required.")
     if not description.strip():
         errors.append("Description is required.")
+    else:
+        desc_word_count = len(description.split())
+        if desc_word_count > 300:
+            errors.append(
+                f"Description is too long ({desc_word_count} words). Please keep it within 300 words."
+            )
+        
     if price <= 0:
         errors.append("Listing price must be greater than 0.")
 
