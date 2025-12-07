@@ -158,32 +158,32 @@ def _matches_query(row, query: str) -> bool:
 
 
         # ---------- IMAGE + CAROUSEL ----------
-        with col_img:
-            if image_paths:
-                idx = st.session_state[img_key] % num_images
-                current_path = image_paths[idx]
+    with col_img:
+        if image_paths:
+            idx = st.session_state[img_key] % num_images
+            current_path = image_paths[idx]
 
-                try:
-                    st.image(current_path, width=220)
-                except Exception:
-                    st.caption("Image not available.")
+            try:
+                st.image(current_path, width=220)
+            except Exception:
+                st.caption("Image not available.")
 
-                if num_images > 1:
-                    c1, c2, c3 = st.columns([1, 1, 1])
-                    with c1:
-                        if st.button("◀", key=f"{prefix}_prev_{listing_id}"):
-                            st.session_state[img_key] = (idx - 1) % num_images
-                            st.rerun()
+            if num_images > 1:
+                c1, c2, c3 = st.columns([1, 1, 1])
+                with c1:
+                    if st.button("◀", key=f"{prefix}_prev_{listing_id}"):
+                        st.session_state[img_key] = (idx - 1) % num_images
+                        st.rerun()
 
-                    with c2:
-                        st.caption(f"{idx + 1} / {num_images}")
-                    with c3:
-                        if st.button("▶", key=f"{prefix}_next_{listing_id}"):
-                            st.session_state[img_key] = (idx + 1) % num_images
-                            st.rerun()
+                with c2:
+                    st.caption(f"{idx + 1} / {num_images}")
+                with c3:
+                    if st.button("▶", key=f"{prefix}_next_{listing_id}"):
+                        st.session_state[img_key] = (idx + 1) % num_images
+                        st.rerun()
 
-            else:
-                st.caption("No image")
+        else:
+            st.caption("No image")
 
         # ---------- TEXT + META + ACTIONS ----------
         with col_text:
