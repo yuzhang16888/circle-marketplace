@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
+from .paypal_client import create_paypal_order
 
 from backend.db import (
     get_users_count,
@@ -290,3 +291,29 @@ def register(payload: RegisterRequest):
     # 2) Create the user
     user_id = create_user(email=email, password=password, full_name=full_name)
     return {"status": "ok", "user_id": user_id}
+class PayPalCreateOrderRequest(BaseModel):
+    total_amount: float
+    currency: str = "USD"
+
+
+@app.post("/payments/paypal/create-order")
+def paypal_create_order(req: PayPalCreateOrderRequest):
+    """
+    Create a PayPal order for the given amount and return the approval URL.
+    """
+    try:
+        # Format as string like "10.00"
+        amount_str = f"{req.total_amount:.2f}"
+        order = create_paypal_order(amount_str, currency=req.currency)
+        if not order.get("approval_url"):
+            raise HTTPException(status_code=500, detail="No approval URL from PayPal")
+        return {
+            "order_id": order["id"],
+            "approval_url": order["approval_url"],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        # For now, just bubble up basic message; we can improve later
+        raise HTTPException(status_code=500, detail=str(e))
+
