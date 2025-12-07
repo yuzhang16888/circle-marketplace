@@ -4,7 +4,9 @@ import streamlit as st
 from core.db import init_db
 init_db()
 from core.auth import ensure_user_logged_in
-from pag import home, create_listing, my_listings, admin_dashboard, profile, cart, checkout,test_strip_connect
+from pag import home, create_listing, my_listings, admin_dashboard, 
+            profile, cart, checkout
+            # ,test_strip_connect
 
 from core.db import Base, engine
 from core import models  # this makes sure User/Listing/Order are registered
@@ -15,8 +17,8 @@ import stripe
 
 
 
-st.write("Stripe Secret Loaded?", "STRIPE_SECRET_KEY" in st.secrets)
-st.write("Stripe Publishable Loaded?", "STRIPE_PUBLISHABLE_KEY" in st.secrets)
+# st.write("Stripe Secret Loaded?", "STRIPE_SECRET_KEY" in st.secrets)
+# st.write("Stripe Publishable Loaded?", "STRIPE_PUBLISHABLE_KEY" in st.secrets)
 
 
 stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
@@ -37,7 +39,7 @@ BASE_NAV_PAGES = [
     "Checkout",
    # "Admin Dashboard",
     "Profile & Friends",
-    "test_strip_connect"
+    # "test_strip_connect"
 ]
 
 def main():
@@ -103,8 +105,8 @@ def main():
         admin_dashboard.render(user)
     elif st.session_state["main_nav"] == "Profile & Friends":
         profile.render(user)
-    elif st.session_state["main_nav"]== "test_strip_connect":
-        test_strip_connect.render(user)
+    # elif st.session_state["main_nav"]== "test_strip_connect":
+    #     test_strip_connect.render(user)
 
 
 if __name__ == "__main__":
