@@ -60,7 +60,7 @@ def render(user):
                         success = delete_listing(user["id"], row["id"])
                         if success:
                             st.success("Listing deleted.")
-                            st.experimental_rerun()
+                            st.rerun()
                         else:
                             st.error("Could not delete listing. Please try again.")
 
