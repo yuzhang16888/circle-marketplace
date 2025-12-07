@@ -176,6 +176,17 @@ def render(user):
         for e in errors:
             st.error(f"• {e}")
         return
+    
+
+        # ---------- DETERMINE PAYMENT METHOD ----------
+    if ui_payment_choice.startswith("Stripe"):
+        actual_payment_method = "stripe"
+    elif ui_payment_choice.startswith("PayPal"):
+        actual_payment_method = "paypal"
+    else:
+        # default fallback
+        actual_payment_method = "stripe"
+
 
     # ---------- LOAD SELLER + STRIPE ACCOUNT ----------
         # ---------- LOAD SELLER (no Stripe account required in Model 2) ----------
@@ -187,6 +198,13 @@ def render(user):
     # In Model 2, Circle collects payment and will pay the seller manually (Zelle/PayPal/etc.).
     # We do NOT require the seller to have a Stripe account here.
 
+
+    # ---------- CREATE ORDER (local DB) ----------
+        # ---------- LOAD SELLER (no Stripe account required in Model 2) ----------
+    seller = get_user_by_id(seller_id)
+    if not seller:
+        st.error("Seller not found.")
+        return
 
     # ---------- CREATE ORDER (local DB) ----------
     buyer_id = user["id"]
@@ -205,9 +223,10 @@ def render(user):
         shipping_postal_code=postal_code_clean,
         shipping_country=country,
         shipping_phone=formatted_phone,
-        payment_method="Stripe",  # main actual payment channel
+        payment_method=actual_payment_method,  # "stripe" or "paypal"
         buyer_note=buyer_note.strip(),
     )
+
 
     # Mark listing as reserved so it disappears from public feed
     update_listing_status(seller_id, listing_id, "reserved")
@@ -217,6 +236,29 @@ def render(user):
         st.session_state["cart_listing_ids"] = [
             x for x in st.session_state["cart_listing_ids"] if x != listing_id
         ]
+        # ---------- IF PAYPAL: SHOW MANUAL PAYMENT INSTRUCTIONS (MVP) ----------
+    if actual_payment_method == "paypal":
+        st.success("✅ Order created. Next step: complete payment via PayPal.")
+
+        st.markdown(
+            f"""
+            **Please send** `${total_price:.2f}` **via PayPal** to:
+
+            **📧jo@circlemarketplace.club**
+
+            (Replace this with Circle's real PayPal email.)
+
+            When you send the payment, please include this in the note:
+
+            **Order ID:** `{order_id}`  
+            **Item:** {listing["title"]}
+            """
+        )
+
+        # Clear checkout selection for this item
+        st.session_state["checkout_listing_id"] = None
+        return
+
 
         # ---------- CREATE STRIPE CHECKOUT SESSION (Model 2: Circle collects full amount) ----------
     try:
