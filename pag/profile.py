@@ -3,7 +3,7 @@
 from typing import Optional
 
 import streamlit as st
-import stripe
+# import stripe
 
 from core.auth import get_current_user, logout
 from core import api_client
@@ -37,68 +37,68 @@ def render(user: Optional[dict] = None):
     # -------------------
     # Stripe payouts
     # -------------------
-    st.markdown("---")
-    st.subheader("Stripe payouts")
+    # st.markdown("---")
+    # st.subheader("Stripe payouts")
 
-    user_id = user["id"]
-    user_row = get_user_by_id(user_id)
+    # user_id = user["id"]
+    # user_row = get_user_by_id(user_id)
 
-    stripe_account_id = None
-    stripe_onboarded = False
-    if user_row:
-        stripe_account_id = user_row["stripe_account_id"]
-        stripe_onboarded = bool(user_row["stripe_onboarded"])
+    # stripe_account_id = None
+    # stripe_onboarded = False
+    # if user_row:
+    #     stripe_account_id = user_row["stripe_account_id"]
+    #     stripe_onboarded = bool(user_row["stripe_onboarded"])
 
-    if stripe_account_id:
-        st.success(f"Stripe account connected: `{stripe_account_id}`")
-        st.caption(
-            "Status: " + ("Onboarded ✔️" if stripe_onboarded else "Onboarding in progress…")
-        )
-    else:
-        st.info(
-            "You haven't connected a Stripe account yet. "
-            "Connect Stripe to receive payouts when you sell items on Circle."
-        )
+    # if stripe_account_id:
+    #     st.success(f"Stripe account connected: `{stripe_account_id}`")
+    #     st.caption(
+    #         "Status: " + ("Onboarded ✔️" if stripe_onboarded else "Onboarding in progress…")
+    #     )
+    # else:
+    #     st.info(
+    #         "You haven't connected a Stripe account yet. "
+    #         "Connect Stripe to receive payouts when you sell items on Circle."
+    #     )
 
-    if st.button("Connect / manage Stripe payouts"):
-        try:
-            stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
+    # if st.button("Connect / manage Stripe payouts"):
+    #     try:
+    #         stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
 
-            # If no account yet, create one (similar to pag/test_strip_connect.py)
-            if not stripe_account_id:
-                account = stripe.Account.create(
-                    type="standard",
-                    email=user.get("email"),
-                    capabilities={
-                        "card_payments": {"requested": True},
-                        "transfers": {"requested": True},
-                    },
-                    metadata={"circle_user_id": str(user_id)},
-                )
+    #         # If no account yet, create one (similar to pag/test_strip_connect.py)
+    #         if not stripe_account_id:
+    #             account = stripe.Account.create(
+    #                 type="standard",
+    #                 email=user.get("email"),
+    #                 capabilities={
+    #                     "card_payments": {"requested": True},
+    #                     "transfers": {"requested": True},
+    #                 },
+    #                 metadata={"circle_user_id": str(user_id)},
+    #             )
 
-                update_user_stripe_account(
-                    user_id=user_id,
-                    stripe_account_id=account.id,
-                    onboarded=False,
-                )
-                stripe_account_id = account.id
-                st.success(
-                    f"✅ Created Stripe account `{account.id}` and saved it to your profile."
-                )
+    #             update_user_stripe_account(
+    #                 user_id=user_id,
+    #                 stripe_account_id=account.id,
+    #                 onboarded=False,
+    #             )
+    #             stripe_account_id = account.id
+    #             st.success(
+    #                 f"✅ Created Stripe account `{account.id}` and saved it to your profile."
+    #             )
 
-            # Generate an onboarding / update link
-            account_link = stripe.AccountLink.create(
-                account=stripe_account_id,
-                refresh_url="http://localhost:8501/profile",  # adjust if profile path differs
-                return_url="http://localhost:8501/profile",
-                type="account_onboarding",
-            )
+    #         # Generate an onboarding / update link
+    #         account_link = stripe.AccountLink.create(
+    #             account=stripe_account_id,
+    #             refresh_url="http://localhost:8501/profile",  # adjust if profile path differs
+    #             return_url="http://localhost:8501/profile",
+    #             type="account_onboarding",
+    #         )
 
-            st.write("Open Stripe onboarding in a new tab:")
-            st.markdown(f"[Open Stripe onboarding]({account_link['url']})")
+    #         st.write("Open Stripe onboarding in a new tab:")
+    #         st.markdown(f"[Open Stripe onboarding]({account_link['url']})")
 
-        except Exception as e:
-            st.error(f"Error talking to Stripe: {e}")
+    #     except Exception as e:
+    #         st.error(f"Error talking to Stripe: {e}")
 
     # -------------------
     # Sign out
