@@ -1,9 +1,13 @@
-# core/db.py
+`# core/db.py
 
 import sqlite3
 # import secrets
 import json
 import os
+
+import sqlite3
+import streamlit as st
+from contextlib import closing
 
 from .config import DB_PATH
 
@@ -1707,3 +1711,4 @@ def update_order_shipping(
 #     )
 #     conn.commit()
 #     conn.close()
+`
