@@ -150,7 +150,7 @@ def render(user):
     # If retail price is 0, store it as None so DB isn't cluttered
     retail_value = retail_price if retail_price > 0 else None
 
-        listing_id = insert_listing(
+    listing_id = insert_listing(
         user_id=user["id"],
         title=title.strip(),
         description=description.strip(),
