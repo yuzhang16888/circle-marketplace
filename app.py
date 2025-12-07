@@ -23,23 +23,23 @@ BASE_NAV_PAGES = [
     "Checkout",
     "Profile & Friends",
 ]
-
+## temp changed
 
 def main():
     # 1) Init DB + page config
-    init_db()
+    init_db()ß
     st.set_page_config(page_title="Circle Marketplace", layout="wide")
 
-    # 2) Backend status indicators in sidebar
-    if backend_ping():
-        st.sidebar.success("Backend: online ✅")
-    else:
-        st.sidebar.error("Backend: offline ❌")
+    # # 2) Backend status indicators in sidebar
+    # if backend_ping():
+    #     st.sidebar.success("Backend: online ✅")
+    # else:
+    #     st.sidebar.error("Backend: offline ❌")
 
-    if backend_db_ping():
-        st.sidebar.success("DB: online ✅")
-    else:
-        st.sidebar.error("DB: offline ❌")
+    # if backend_db_ping():
+    #     st.sidebar.success("DB: online ✅")
+    # else:
+    #     st.sidebar.error("DB: offline ❌")
 
     # 3) Auth – ensure user is logged in
     user = ensure_user_logged_in()
