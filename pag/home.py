@@ -181,6 +181,15 @@ def render(user):
             st.rerun()
 
     st.divider()
+        # ---- Search bar ----
+    search_query = st.text_input(
+        "Search listings",
+        value="",
+        placeholder="Search by title, brand, category, description, or seller…",
+    )
+
+    st.divider()
+
 
     # ---- Friends' Listings ----
     st.subheader("Friends' Listings")
