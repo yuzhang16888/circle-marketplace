@@ -53,18 +53,18 @@ def render(user):
     col1, col2 = st.columns(2)
     with col1:
         retail_price = st.number_input(
-            "Original retail price",
-            min_value=0.0,
-            step=10.0,
-            format="%.2f",
+            "Original retail price($)",
+            min_value=0,
+            step=10,
+            format="%d",
             help="If known. Helps buyers understand the value.",
         )
     with col2:
         price = st.number_input(
-            "Your listing price *",
-            min_value=0.0,
-            step=10.0,
-            format="%.2f",
+            "Your listing price($) *",
+            min_value=0,
+            step=10,
+            format="%d",
         )
 
     description = st.text_area(

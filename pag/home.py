@@ -133,7 +133,7 @@ def _listing_card(row, user, prefix: str):
 
 
 def render(user):
-    st.header("Circle Marketplace – Home (Friends + All Listings)")
+    st.header("Circle Marketplace – Home")
 
     # ---- Top bar: user + logout/switch + quick cart/likes summary ----
     cols = st.columns([3, 2, 1])
