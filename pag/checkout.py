@@ -126,7 +126,7 @@ def render(user):
         st.subheader("Payment preference (for notes only)")
         payment_method = st.selectbox(
             "Preferred payment method (for seller reference)",
-            ["Stripe (recommended)", "Venmo", "PayPal", "Zelle", "Cash App", "Bank transfer", "Other"],
+            ["Stripe", "PayPal"],
             index=0,
         )
 
