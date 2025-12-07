@@ -3,7 +3,7 @@
 from typing import Optional
 
 import streamlit as st
-# import stripe
+import stripe
 
 from core.auth import get_current_user, logout
 from core import api_client

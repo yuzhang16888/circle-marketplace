@@ -1,10 +1,10 @@
+streamlit
 stripe
-
 
 fastapi
 uvicorn[standard]
 requests
 psycopg2-binary
 
-sqlalchemsqlalchemy>=2.0.0
-
+# Only keep this if you really still need SQLAlchemy somewhere
+sqlalchemy>=2.0.0
