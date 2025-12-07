@@ -192,16 +192,21 @@ def render(user):
 
 
     # ---- Friends' Listings ----
+       # ---- Friends' Listings ----
     st.subheader("Friends' Listings")
     friend_listings = get_friend_listings(user["id"])
 
+    if search_query.strip():
+        friend_listings = [
+            row for row in friend_listings
+            if _matches_query(row, search_query)
+        ]
+
     if not friend_listings:
-        st.info("No listings from friends yet. Once you add friends, their items will show up here.")
+        st.info("No listings from friends match your search yet.")
     else:
         for row in friend_listings:
             _listing_card(row, user, prefix="friend")
-
-    st.divider()
 
     # ---- All Marketplace Listings ----
     st.subheader("All Marketplace Listings")
