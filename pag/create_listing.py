@@ -37,7 +37,7 @@ def render(user):
     )
 
     title = st.text_input("Title *")
-    brand = st.text_input("Brand", help="e.g., Chanel, Ganni, Celine, Loewe, etc.")
+    brand = st.text_input("Brand", help="Maximum 30 words.e.g., Chanel, Pokemon, Celine, Loewe, etc.")
     category = st.selectbox("Category *", CATEGORIES, index=0)
     if category == "Other":
         category_other = st.text_input("Category (custom)")
@@ -101,6 +101,13 @@ def render(user):
     errors = []
     if not title.strip():
         errors.append("Title is required.")
+    else:
+        title_word_count = len(title.split())
+        if title_word_count > 30:
+             errors.append(
+                f"Title is too long ({title_word_count} words). Please keep it within 30 words."
+        )
+
     if not description.strip():
         errors.append("Description is required.")
     else:
@@ -109,6 +116,7 @@ def render(user):
             errors.append(
                 f"Description is too long ({desc_word_count} words). Please keep it within 300 words."
             )
+            
         
     if price <= 0:
         errors.append("Listing price must be greater than 0.")
