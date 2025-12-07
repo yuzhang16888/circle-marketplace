@@ -27,7 +27,7 @@ BASE_NAV_PAGES = [
 
 def main():
     # 1) Init DB + page config
-    init_db()ß
+    init_db()
     st.set_page_config(page_title="Circle Marketplace", layout="wide")
 
     # # 2) Backend status indicators in sidebar
