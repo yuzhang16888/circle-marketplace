@@ -45,45 +45,25 @@
 #     but we keep this so existing imports don't break.
 #     """
 #     return SessionLocal()
-import sqlite3
-# import secrets
-import json
-import os
+
 
 import sqlite3
+import json
+import os
+import secrets  # you use secrets.token_urlsafe in create_invite_code
 import streamlit as st
 from contextlib import closing
 
 from .config import DB_PATH
 
-# --- Optional SQLAlchemy setup (not required for current sqlite helpers, but kept for future use) ---
-# from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-
-# SQLite URL – keep it in project root as circle.db
-DATABASE_URL = "sqlite:///./circle.db"
-
-# # Needed for SQLite + multiple threads (Streamlit)
-# engine = create_engine(
-#     DATABASE_URL,
-#     connect_args={"check_same_thread": False},
-# )
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
-
 
 def get_db():
     """
-    Simple helper for future SQLAlchemy-based code.
+    Placeholder for future SQLAlchemy-based code.
 
-    Current app mostly uses direct sqlite3 helpers below,
-    but we keep this so existing imports don't break.
+    Currently unused in the app; we keep it so existing imports don't break.
     """
-    return SessionLocal()
-
-
+    return None
 
 
 # ----------------- Low-level sqlite3 connection helpers -----------------
