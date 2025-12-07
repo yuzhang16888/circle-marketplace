@@ -122,11 +122,15 @@ def render(user):
             value="", 
             placeholder="e.g. (415) 555-1234",
         )
+        
+        st.subheader("How would you like to pay?")
 
-        st.subheader("Payment preference (for notes only)")
-        payment_method = st.selectbox(
-            "Preferred payment method (for seller reference)",
-            ["Stripe", "PayPal"],
+        ui_payment_choice = st.radio(
+            "Payment method",
+            [
+                "Stripe (card, Apple Pay, Google Pay)",
+                "PayPal",
+            ],
             index=0,
         )
 
@@ -136,6 +140,21 @@ def render(user):
         )
 
         submitted = st.form_submit_button("Place order and go to payment")
+
+
+        # st.subheader("Payment preference (for notes only)")
+        # payment_method = st.selectbox(
+        #     "Preferred payment method (for seller reference)",
+        #     ["Stripe", "PayPal"],
+        #     index=0,
+        # )
+
+        # buyer_note = st.text_area(
+        #     "Notes for the seller (optional)",
+        #     placeholder="e.g. Please ship with signature required.",
+        # )
+
+        # submitted = st.form_submit_button("Place order and go to payment")
 
     # If user hasn't submitted yet, stop here
     if not submitted:
