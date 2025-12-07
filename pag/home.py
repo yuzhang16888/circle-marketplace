@@ -59,6 +59,29 @@ def _listing_card(row, user, prefix: str):
 
     with st.container(border=True):
         col_img, col_text = st.columns([1, 2])
+def _matches_query(row, query: str) -> bool:
+    """
+    Return True if the listing row matches the search query
+    on title, brand, category, condition, description, or seller name.
+    """
+    if not query:
+        return True
+
+    q = query.lower()
+    fields = [
+        row.get("title"),
+        row.get("brand"),
+        row.get("category"),
+        row.get("condition"),
+        row.get("description"),
+        row.get("seller_name"),
+    ]
+
+    for val in fields:
+        if val and q in str(val).lower():
+            return True
+    return False
+
 
         # ---------- IMAGE + CAROUSEL ----------
         with col_img:
