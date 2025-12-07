@@ -5,4 +5,5 @@ uvicorn[standard]
 requests
 psycopg2-binary
 
-sqlalchemy
+sqlalchemsqlalchemy>=2.0.0
+
