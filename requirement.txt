@@ -7,4 +7,4 @@ requests
 psycopg2-binary
 
 # Only keep this if you really still need SQLAlchemy somewhere
-sqlalchemy>=2.0.0
+
