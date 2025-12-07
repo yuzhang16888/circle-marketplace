@@ -4,8 +4,10 @@
 
 
 # app.py
+from core.api_client import BACKEND_BASE_URL
 
-import streamlit as st
+
+#import streamlit as st
 
 from core.api_client import backend_ping, backend_db_ping
 from core.db import init_db
@@ -27,6 +29,7 @@ BASE_NAV_PAGES = [
 
 def main():
     # 1) Init DB + page config
+    import streamlit as st
     init_db()
     st.set_page_config(page_title="Circle Marketplace", layout="wide")
 
