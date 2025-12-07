@@ -14,11 +14,11 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 # SQLite URL – keep it in project root as circle.db
 DATABASE_URL = "sqlite:///./circle.db"
 
-# Needed for SQLite + multiple threads (Streamlit)
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},
-)
+# # Needed for SQLite + multiple threads (Streamlit)
+# engine = create_engine(
+#     DATABASE_URL,
+#     connect_args={"check_same_thread": False},
+# )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
