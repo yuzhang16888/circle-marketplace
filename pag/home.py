@@ -134,27 +134,25 @@ def _matches_query(row, query: str) -> bool:
     """
     Return True if the listing row matches the search query
     on title, brand, category, condition, description, or seller name.
+    Works with sqlite3.Row objects.
     """
     if not query:
         return True
 
     q = query.lower()
-    fields = [
-        row.get("title"),
-        row.get("brand"),
-        row.get("category"),
-        row.get("condition"),
-        row.get("description"),
-        row.get("seller_name"),
-    ]
+    # the keys we want to search on
+    keys = ["title", "brand", "category", "condition", "description", "seller_name"]
 
-    for val in fields:
+    for key in keys:
+        try:
+            val = row[key]
+        except KeyError:
+            val = None
+
         if val and q in str(val).lower():
             return True
 
     return False
-
-
 
 
         # ---------- IMAGE + CAROUSEL ----------
