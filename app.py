@@ -1,31 +1,38 @@
-# app.py
-from core.api_client import backend_ping,backend_db_ping
-import streamlit as st
-from core.db import init_db
-init_db()
-from core.auth import ensure_user_logged_in
-from pag import home, create_listing, my_listings, admin_dashboard, profile, cart, checkout
-            # ,test_strip_connect
+# # app.py
+# from core.api_client import backend_ping,backend_db_ping
+# import streamlit as st
+# from core.db import init_db
+# init_db()
+# from core.auth import ensure_user_logged_in
+# from pag import home, create_listing, my_listings, admin_dashboard, profile, cart, checkout
+#             # ,test_strip_connect
 
-# from core.db import Base, engine
-from core import models  # this makes sure User/Listing/Order are registered
+# # from core.db import Base, engine
+# from core import models  # this makes sure User/Listing/Order are registered
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
-import stripe
+# import stripe
 
 
 
 # st.write("Stripe Secret Loaded?", "STRIPE_SECRET_KEY" in st.secrets)
 # st.write("Stripe Publishable Loaded?", "STRIPE_PUBLISHABLE_KEY" in st.secrets)
+import streamlit as st
+
+from core.api_client import backend_ping, backend_db_ping
+from core.db import init_db
+from core.auth import ensure_user_logged_in
+from pag import home, create_listing, my_listings, admin_dashboard, profile, cart, checkout
+# from pag import test_strip_connect  # optional test page – keep commented for now
 
 
-stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
+# stripe.api_key = st.secrets["STRIPE_SECRET_KEY"]
 
-PUBLISHABLE_KEY = st.secrets["STRIPE_PUBLISHABLE_KEY"]
-SUCCESS_URL = st.secrets["STRIPE_SUCCESS_URL"]
-CANCEL_URL = st.secrets["STRIPE_CANCEL_URL"]
-FEE_PERCENT = st.secrets["STRIPE_PLATFORM_FEE_PERCENT"]
+# PUBLISHABLE_KEY = st.secrets["STRIPE_PUBLISHABLE_KEY"]
+# SUCCESS_URL = st.secrets["STRIPE_SUCCESS_URL"]
+# CANCEL_URL = st.secrets["STRIPE_CANCEL_URL"]
+# FEE_PERCENT = st.secrets["STRIPE_PLATFORM_FEE_PERCENT"]
 
 
 
