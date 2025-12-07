@@ -1,9 +1,18 @@
 # core/api_client.py
+# import os
+# import requests
+# from typing import Optional
+
+# BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", "http://localhost:8000")
 import os
 import requests
+import streamlit as st
 from typing import Optional
 
-BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", "http://localhost:8000")
+BACKEND_BASE_URL = st.secrets.get(
+    "BACKEND_BASE_URL",
+    os.getenv("BACKEND_BASE_URL", "http://localhost:8000"),
+)
 
 
 def _url(path: str) -> str:
