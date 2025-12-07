@@ -191,7 +191,7 @@ def render(user):
     st.divider()
 
 
-    # ---- Friends' Listings ----
+  
        # ---- Friends' Listings ----
     st.subheader("Friends' Listings")
     friend_listings = get_friend_listings(user["id"])
@@ -209,11 +209,21 @@ def render(user):
             _listing_card(row, user, prefix="friend")
 
     # ---- All Marketplace Listings ----
+        # ---- All Marketplace Listings ----
     st.subheader("All Marketplace Listings")
     all_listings = get_all_listings()
 
+    if search_query.strip():
+        all_listings = [
+            row for row in all_listings
+            if _matches_query(row, search_query)
+        ]
+
     if not all_listings:
-        st.info("No listings in the marketplace yet. Be the first to create one! ✨")
+        if search_query.strip():
+            st.info("No marketplace listings match your search yet.")
+        else:
+            st.info("No listings in the marketplace yet. Be the first to create one! ✨")
         return
 
     for row in all_listings:
