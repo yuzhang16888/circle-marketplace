@@ -182,6 +182,14 @@ def render(user):
     if not seller:
         st.error("Seller not found.")
         return
+    # --- DEBUG: see what checkout sees for this seller ---
+    try:
+        st.write("DEBUG seller_id:", seller_id)
+        st.write("DEBUG seller row:", dict(seller))
+    except Exception:
+        st.write("DEBUG seller_id:", seller_id)
+        st.write("DEBUG stripe_account_id:", seller["stripe_account_id"])
+        st.write("DEBUG stripe_onboarded:", seller["stripe_onboarded"])
 
     seller_stripe_account_id = seller["stripe_account_id"]
     if not seller_stripe_account_id:
@@ -289,3 +297,4 @@ def render(user):
         st.error(f"Error creating Stripe Checkout session: {e}")
         # Optional: revert listing status if you want
         # update_listing_status(seller_id, listing_id, "published")
+   
